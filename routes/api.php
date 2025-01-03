@@ -53,9 +53,9 @@ Route::middleware('auth:sanctum')->prefix('admin/categorias')->group(function ()
 });
 
 Route::middleware('auth:sanctum')->prefix('admin/productos')->group(function () {
-    Route::get('/', [ProductoController::class, 'index']);
-    Route::post('/', [ProductoController::class, 'store']);
-    Route::get('{id}', [ProductoController::class, 'show']);
-    Route::put('{id}', [ProductoController::class, 'update']);
-    Route::delete('{id}', [ProductoController::class, 'destroy']);
+    Route::get('/', [ProductoController::class, 'index']); // Obtener la lista de todos los productos
+    Route::post('/', [ProductoController::class, 'store']);  // Crear un nuevo producto
+    Route::get('{id}', [ProductoController::class, 'show']);  // Obtener los detalles de un producto específico por su ID
+    Route::put('{id}', [ProductoController::class, 'update']);  // Actualizar la información de un producto específico por su ID
+    Route::delete('{id}', [ProductoController::class, 'destroy']); // Eliminar un producto específico por su ID
 });
