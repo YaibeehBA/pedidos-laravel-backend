@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('producto_id');
             $table->unsignedBigInteger('color_id');
             $table->unsignedBigInteger('talla_id');
+            $table->decimal('precio_base', 10, 2);
             $table->integer('stock')->default(0);
             $table->string('imagen_url')->nullable();
             $table->timestamps();

@@ -8,114 +8,102 @@ use App\Models\Producto;
 
 class ProductoController extends Controller
 {
+    // Listar todos los productos
     public function index()
     {
-        try {
-            $products = Producto::with('category')->get();
-            
-            return response()->json([
-                'status' => true,
-                'message' => 'Lista de productos obtenida exitosamente',
-                'data' => $products
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Error al obtener los productos',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        $productos = Producto::with('categoria')->get();
+        return response()->json([
+            'status' => true,
+            'message' => 'Lista de productos obtenida exitosamente',
+            'data' => $productos,
+        ], 200);
     }
 
+    // Crear un nuevo producto
     public function store(Request $request)
     {
-        try {
-            $request->validate([
-                'category_id' => 'required|exists:categories,id',
-                'nombre' => 'required|string|max:255',
-                'descripcion' => 'required|string',
-                'precio_base' => 'required|numeric|min:0'
-            ]);
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'categoria_id' => 'required|exists:categorias,id',
+        ]);
 
-            $product = Producto::create($request->all());
+        $producto = Producto::create($request->only('nombre', 'descripcion', 'categoria_id'));
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Producto creado exitosamente',
-                'data' => $product
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Error al crear el producto',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Producto creado exitosamente',
+            'data' => $producto->load('categoria'),
+        ], 201); // 201 indica "Creado".
     }
 
+    // Mostrar un producto específico
     public function show($id)
     {
-        try {
-            $product = Producto::with(['category', 'variants.color', 'variants.size'])
-                ->findOrFail($id);
+        $producto = Producto::with('categoria')->find($id);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Producto encontrado exitosamente',
-                'data' => $product
-            ], 200);
-        } catch (\Exception $e) {
+        if (!$producto) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error al obtener el producto',
-                'error' => $e->getMessage()
+                'message' => 'Producto no encontrado',
+                'data' => null,
             ], 404);
         }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Producto obtenido exitosamente',
+            'data' => $producto,
+        ], 200);
     }
 
+    // Actualizar un producto
     public function update(Request $request, $id)
     {
-        try {
-            $request->validate([
-                'category_id' => 'exists:categories,id',
-                'name' => 'string|max:255',
-                'description' => 'string',
-                'base_price' => 'numeric|min:0'
-            ]);
+        $producto = Producto::find($id);
 
-            $product = Producto::findOrFail($id);
-            $product->update($request->all());
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Producto actualizado exitosamente',
-                'data' => $product
-            ], 200);
-        } catch (\Exception $e) {
+        if (!$producto) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error al actualizar el producto',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Producto no encontrado',
+                'data' => null,
+            ], 404);
         }
+
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'categoria_id' => 'required|exists:categorias,id',
+        ]);
+
+        $producto->update($request->only('nombre', 'descripcion', 'categoria_id'));
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Producto actualizado exitosamente',
+            'data' => $producto->load('categoria'),
+        ], 200);
     }
 
+    // Eliminar un producto
     public function destroy($id)
     {
-        try {
-            $product = Producto::findOrFail($id);
-            $product->delete();
+        $producto = Producto::find($id);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Producto eliminado exitosamente'
-            ], 200);
-        } catch (\Exception $e) {
+        if (!$producto) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error al eliminar el producto',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Producto no encontrado',
+                'data' => null,
+            ], 404);
         }
+
+        $producto->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Producto eliminado exitosamente',
+            'data' => $producto,
+        ], 200);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Producto\ColorController;
 use App\Http\Controllers\Producto\TallaController;
+use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Producto\CategoriaController;
 /*
 |--------------------------------------------------------------------------
@@ -49,4 +50,12 @@ Route::middleware('auth:sanctum')->prefix('admin/categorias')->group(function ()
     Route::get('{id}', [CategoriaController::class, 'show']); // Mostrar una categoría específica
     Route::put('{id}', [CategoriaController::class, 'update']); // Actualizar categoría
     Route::delete('{id}', [CategoriaController::class, 'destroy']); // Eliminar categoría
+});
+
+Route::middleware('auth:sanctum')->prefix('admin/productos')->group(function () {
+    Route::get('/', [ProductoController::class, 'index']);
+    Route::post('/', [ProductoController::class, 'store']);
+    Route::get('{id}', [ProductoController::class, 'show']);
+    Route::put('{id}', [ProductoController::class, 'update']);
+    Route::delete('{id}', [ProductoController::class, 'destroy']);
 });
