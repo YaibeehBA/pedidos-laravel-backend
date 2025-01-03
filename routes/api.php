@@ -9,6 +9,7 @@ use App\Http\Controllers\Producto\ColorController;
 use App\Http\Controllers\Producto\TallaController;
 use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Producto\CategoriaController;
+use App\Http\Controllers\Producto\DetalleProductoController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -58,4 +59,34 @@ Route::middleware('auth:sanctum')->prefix('admin/productos')->group(function () 
     Route::get('{id}', [ProductoController::class, 'show']);  // Obtener los detalles de un producto específico por su ID
     Route::put('{id}', [ProductoController::class, 'update']);  // Actualizar la información de un producto específico por su ID
     Route::delete('{id}', [ProductoController::class, 'destroy']); // Eliminar un producto específico por su ID
+});
+
+Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(function () {
+
+    // Ruta para listar todos los detalles de productos
+    Route::get('/', [DetalleProductoController::class, 'index']);
+    // Obtener todos los detalles de productos. Ejemplo: Ver todos los productos con sus detalles (colores, tallas, precios, stock)
+
+    // Ruta para crear un nuevo detalle de producto
+    Route::post('/', [DetalleProductoController::class, 'store']);
+    // Crear un nuevo detalle de producto. Se debe proporcionar la información del producto (ID), color (ID), talla (ID), precio, stock e imagen.
+
+    // Ruta para obtener un detalle específico de producto
+    Route::get('{id}', [DetalleProductoController::class, 'show']);
+    // Ver un detalle de producto específico por su ID. Esto incluirá información como el producto, color, talla y stock de ese detalle en particular.
+
+    // // Ruta para actualizar un detalle de producto existente
+    //  Route::put('{id}', [DetalleProductoController::class, 'update']);
+    // // Actualizar la información de un detalle de producto. Esto puede incluir cambios en precio, stock, color, talla, o incluso cambiar la imagen.
+
+    // Ruta para eliminar un detalle de producto específico
+    Route::delete('{id}', [DetalleProductoController::class, 'destroy']);
+    // Eliminar un detalle de producto por su ID. Esto puede eliminar variaciones de un producto que ya no estén disponibles.
+
+});
+
+Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(function () {
+    // Ruta para actualizar un detalle de producto
+    Route::put('{id}', [DetalleProductoController::class, 'update']); // Acepta PUT
+    Route::patch('{id}', [DetalleProductoController::class, 'update']); // Acepta PATCH
 });
