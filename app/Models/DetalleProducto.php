@@ -14,7 +14,7 @@ class DetalleProducto extends Model
         'color_id',
         'talla_id',
         'precio_base',
-        'stock',
+        
         'imagen_url'
     ];
 

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use Illuminate\Http\Response;
 use App\Models\DetalleProducto;
+use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class DetalleProductoController extends Controller
 {
-    public function index()
+    public function all()
     {
         try {
             $variants = DetalleProducto::with(['producto', 'color', 'talla'])->get();
@@ -43,7 +44,7 @@ class DetalleProductoController extends Controller
             'color_id' => 'required|exists:colores,id',
             'talla_id' => 'required|exists:tallas,id',
             'precio_base' => 'required|numeric|min:0',
-            'stock' => 'required|integer',
+          
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación para la imagen
         ]);
 
@@ -93,7 +94,7 @@ class DetalleProductoController extends Controller
             'color_id' => 'required|exists:colores,id',
             'talla_id' => 'required|exists:tallas,id',
             'precio_base' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+           
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación de imagen
         ]);
     
@@ -121,7 +122,7 @@ class DetalleProductoController extends Controller
             'color_id',
             'talla_id',
             'precio_base',
-            'stock',
+            
             'imagen_url'
         ]));
     
@@ -159,4 +160,54 @@ class DetalleProductoController extends Controller
             'message' => 'Detalle de producto eliminado exitosamente',
         ], 200);
     }
+
+    public function index()
+{
+    try {
+        // Obtener las variantes con relaciones
+        $variants = DetalleProducto::with(['producto', 'color', 'talla'])->get();
+
+        // Agrupar por categoría utilizando colecciones de Laravel
+        $agrupados = $variants->groupBy(function ($item) {
+            return $item->producto->categoria_id;
+        })->map(function ($items, $categoria_id) {
+            return [
+                'categoria_id' => $categoria_id,
+                'productos' => $items->groupBy('producto_id')->map(function ($variantes, $producto_id) {
+                    return [
+                        'producto_id' => $producto_id,
+                        'nombre' => $variantes->first()->producto->nombre,
+                        'descripcion' => $variantes->first()->producto->descripcion,
+                        'variantes' => $variantes->map(function ($variante) {
+                            return [
+                                'id' => $variante->id,
+                                'color' => $variante->color->nombre ?? 'N/A',
+                                'talla' => $variante->talla->nombre ?? 'N/A',
+                                'precio_base' => $variante->precio_base,
+                    
+                                'imagen_url' => $variante->imagen_url
+                            ];
+                        })->values()
+                    ];
+                })->values()
+            ];
+        })->values();
+
+        // Devolver la respuesta JSON
+        return response()->json([
+            'status' => true,
+            'message' => 'Lista de productos agrupada por categoría obtenida exitosamente',
+            'data' => $agrupados
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Error al obtener las variantes',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
 }

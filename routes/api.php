@@ -27,6 +27,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('/auth/register', [RegisterController::class, 'registerUser']);
 Route::post('/auth/login', [LoginController::class, 'loginUser']);
+Route::post('/auth/forgot-password', [LoginController::class, 'forgotPassword']);
+Route::post('/auth/reset-password', [LoginController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->get('/auth/logout', [LogoutController::class, 'logoutUser']);
 
 Route::middleware('auth:sanctum')->prefix('admin/colores')->group(function () {
@@ -83,6 +85,9 @@ Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(fun
     Route::delete('{id}', [DetalleProductoController::class, 'destroy']);
     // Eliminar un detalle de producto por su ID. Esto puede eliminar variaciones de un producto que ya no estén disponibles.
 
+    
+
+
 });
 
 Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(function () {
@@ -90,3 +95,5 @@ Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(fun
     Route::put('{id}', [DetalleProductoController::class, 'update']); // Acepta PUT
     Route::patch('{id}', [DetalleProductoController::class, 'update']); // Acepta PATCH
 });
+
+Route::get('/admin/detalle/all', [DetalleProductoController::class, 'all']);
