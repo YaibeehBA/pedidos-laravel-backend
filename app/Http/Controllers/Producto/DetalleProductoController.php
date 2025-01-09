@@ -48,7 +48,7 @@ class DetalleProductoController extends Controller
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación para la imagen
         ]);
 
-        $detalleProductoData = $request->only(['producto_id', 'color_id', 'talla_id', 'precio_base','stock']);
+        $detalleProductoData = $request->only(['producto_id', 'color_id', 'talla_id', 'precio_base']);
 
         // Subir la imagen si existe
         if ($request->hasFile('imagen_url')) {
