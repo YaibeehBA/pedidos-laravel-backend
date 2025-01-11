@@ -30,6 +30,7 @@ Route::post('/auth/register', [RegisterController::class, 'registerUser']);
 Route::post('/auth/login', [LoginController::class, 'loginUser']);
 Route::post('/auth/forgot-password', [LoginController::class, 'forgotPassword']);
 Route::post('/auth/reset-password', [LoginController::class, 'resetPassword']);
+
 Route::middleware('auth:sanctum')->get('/auth/logout', [LogoutController::class, 'logoutUser']);
 
 
@@ -64,6 +65,8 @@ Route::middleware('auth:sanctum')->prefix('admin/categorias')->group(function ()
     Route::put('{id}', [CategoriaController::class, 'update']); // Actualizar categoría
     Route::delete('{id}', [CategoriaController::class, 'destroy']); // Eliminar categoría
 });
+
+
 
 Route::middleware('auth:sanctum')->prefix('admin/productos')->group(function () {
     Route::get('/', [ProductoController::class, 'index']); // Obtener la lista de todos los productos
@@ -108,3 +111,9 @@ Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(fun
 });
 
 Route::get('/admin/detalle/all', [DetalleProductoController::class, 'all']);
+
+// Ruta pública (no requiere autenticación)
+Route::get('public/categorias', [CategoriaController::class, 'index']);
+Route::get('public/variante-productos', [DetalleProductoController::class, 'index']);
+Route::get('public/variante-productos/{id}', [DetalleProductoController::class, 'show']);
+Route::get('public/categorias/{id}', [CategoriaController::class, 'show']); // Mostrar una categoría específica
