@@ -26,7 +26,10 @@ class User extends Authenticatable
         'esadmin',
 
     ];
-
+    public function ordenes()
+    {
+        return $this->hasMany(Orden::class, 'usuario_id');
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

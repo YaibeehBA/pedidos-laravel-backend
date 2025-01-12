@@ -1,16 +1,18 @@
 <?php
 
+use App\Models\Orden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\UsuarioController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Pedidos\OrdenController;
 use App\Http\Controllers\Producto\ColorController;
 use App\Http\Controllers\Producto\TallaController;
 use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Producto\CategoriaController;
 use App\Http\Controllers\Producto\DetalleProductoController;
-use App\Http\Controllers\Auth\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,8 +102,6 @@ Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(fun
     // Eliminar un detalle de producto por su ID. Esto puede eliminar variaciones de un producto que ya no estén disponibles.
 
 
-
-
 });
 
 Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(function () {
@@ -117,3 +117,11 @@ Route::get('public/categorias', [CategoriaController::class, 'index']);
 Route::get('public/variante-productos', [DetalleProductoController::class, 'index']);
 Route::get('public/variante-productos/{id}', [DetalleProductoController::class, 'show']);
 Route::get('public/categorias/{id}', [CategoriaController::class, 'show']); // Mostrar una categoría específica
+Route::post('public/orden', [OrdenController::class, 'crearOrden']); // Obtener la lista de todos los productos
+Route::get('public/ordenes', [OrdenController::class, 'listarOrdenes']);
+
+Route::put('/ordenes/{id}', [OrdenController::class, 'actualizarOrden']);
+Route::delete('/ordenes/{id}', [OrdenController::class, 'eliminarOrden']);
+Route::get('/usuarios/{usuario_id}/ordenes', [OrdenController::class, 'listarOrdenesPorUsuario']);
+
+
