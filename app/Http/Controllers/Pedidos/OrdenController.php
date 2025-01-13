@@ -9,6 +9,8 @@ use App\Models\DetalleOrden;
 use App\Models\DetalleProducto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+
 
 class OrdenController extends Controller
 {
@@ -95,6 +97,8 @@ class OrdenController extends Controller
             'orden' => $orden,
         ]);
     }
+
+
     public function listarOrdenes()
     {
         $ordenes = Orden::with(['detalles.detalleProducto.producto'])->get();
@@ -167,6 +171,74 @@ class OrdenController extends Controller
             'ordenes' => $ordenes
         ], 200);
     }
+
+    public function calcularFechaEntrega(Request $request)
+    {
+        $validated = $request->validate([
+            'cantidad' => 'required|integer|min:1|max:30',  // Validamos la cantidad de prendas
+        ], [
+            'cantidad.required' => 'El campo cantidad es obligatorio.',
+            'cantidad.integer' => 'La cantidad debe ser un número entero.',
+            'cantidad.min' => 'La cantidad mínima es 1.',
+            'cantidad.max' => 'La cantidad máxima es 30.',
+        ]);
+        
+        $cantidadTotal = $validated['cantidad'];
+    
+        // Definir días según rangos de prendas
+        if ($cantidadTotal <= 6) {
+            $diasEntrega = 3;
+        } elseif ($cantidadTotal <= 15) {
+            $diasEntrega = 5;
+        } elseif ($cantidadTotal <= 30) {
+            $diasEntrega = 7;
+        } else {
+            return response()->json([
+                'message' => 'El pedido supera la cantidad máxima permitida (30 prendas).',
+            ], 400);
+        }
+    
+        // Determinar la fecha inicial para el cálculo de entrega
+        $ultimaFechaEntrega = Orden::max('fecha_entrega');
+        if ($ultimaFechaEntrega) {
+            $fechaInicio = Carbon::parse($ultimaFechaEntrega)->isPast() 
+                ? now() 
+                : Carbon::parse($ultimaFechaEntrega);
+        } else {
+            $fechaInicio = now(); // No hay órdenes previas
+        }
+    
+        // Calcular la nueva fecha de entrega
+        $fechaEntrega = $fechaInicio->copy()->addDays($diasEntrega);
+    
+        return response()->json([
+            'fecha_entrega' => $fechaEntrega->toISOString(),
+        ]);
+    }
+    
+
+    public function obtenerOrdenesPorUsuario(Request $request, $usuarioId)
+{
+    // Validar que el usuario existe
+    $usuario = User::find($usuarioId);
+
+    if (!$usuario) {
+        return response()->json([
+            'message' => 'Usuario no encontrado.'
+        ], 404);
+    }
+
+    // Obtener todas las órdenes del usuario con sus detalles
+    $ordenes = Orden::where('usuario_id', $usuarioId)
+        ->with(['detallesOrden.detalleProducto.producto'])
+        ->get();
+
+    // Retornar las órdenes con su información
+    return response()->json([
+        'message' => 'Órdenes recuperadas exitosamente.',
+        'ordenes' => $ordenes
+    ]);
+}
 
 
 }

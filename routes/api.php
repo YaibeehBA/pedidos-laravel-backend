@@ -117,11 +117,16 @@ Route::get('public/categorias', [CategoriaController::class, 'index']);
 Route::get('public/variante-productos', [DetalleProductoController::class, 'index']);
 Route::get('public/variante-productos/{id}', [DetalleProductoController::class, 'show']);
 Route::get('public/categorias/{id}', [CategoriaController::class, 'show']); // Mostrar una categoría específica
+
+
 Route::post('public/orden', [OrdenController::class, 'crearOrden']); // Obtener la lista de todos los productos
 Route::get('public/ordenes', [OrdenController::class, 'listarOrdenes']);
 
 Route::put('/ordenes/{id}', [OrdenController::class, 'actualizarOrden']);
 Route::delete('/ordenes/{id}', [OrdenController::class, 'eliminarOrden']);
 Route::get('/usuarios/{usuario_id}/ordenes', [OrdenController::class, 'listarOrdenesPorUsuario']);
+
+Route::post('public/calcular-fecha-entrega', [OrdenController::class, 'calcularFechaEntrega']);
+Route::get('/ordenes/usuario/{usuarioId}', [OrdenController::class, 'obtenerOrdenesPorUsuario']);
 
 
