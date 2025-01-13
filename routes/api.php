@@ -127,6 +127,6 @@ Route::delete('/ordenes/{id}', [OrdenController::class, 'eliminarOrden']);
 Route::get('/usuarios/{usuario_id}/ordenes', [OrdenController::class, 'listarOrdenesPorUsuario']);
 
 Route::post('public/calcular-fecha-entrega', [OrdenController::class, 'calcularFechaEntrega']);
-Route::get('/ordenes/usuario/{usuarioId}', [OrdenController::class, 'obtenerOrdenesPorUsuario']);
+Route::get('/public/ordenes/usuario/{usuarioId}', [OrdenController::class, 'obtenerOrdenesPorUsuario']);
 
 
