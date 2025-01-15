@@ -11,6 +11,8 @@ use App\Http\Controllers\Pedidos\OrdenController;
 use App\Http\Controllers\Producto\ColorController;
 use App\Http\Controllers\Producto\TallaController;
 use App\Http\Controllers\Producto\ProductoController;
+use App\Http\Controllers\Reportes\ReportesController;
+use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\Producto\CategoriaController;
 use App\Http\Controllers\Producto\DetalleProductoController;
 
@@ -122,11 +124,13 @@ Route::get('public/categorias/{id}', [CategoriaController::class, 'show']); // M
 Route::post('public/orden', [OrdenController::class, 'crearOrden']); // Obtener la lista de todos los productos
 Route::get('public/ordenes', [OrdenController::class, 'listarOrdenes']);
 
-Route::put('/ordenes/{id}', [OrdenController::class, 'actualizarOrden']);
+Route::put('/public/ordenes/{id}', [OrdenController::class, 'actualizarOrden']);
 Route::delete('/ordenes/{id}', [OrdenController::class, 'eliminarOrden']);
 Route::get('/usuarios/{usuario_id}/ordenes', [OrdenController::class, 'listarOrdenesPorUsuario']);
 
 Route::post('public/calcular-fecha-entrega', [OrdenController::class, 'calcularFechaEntrega']);
 Route::get('/public/ordenes/usuario/{usuarioId}', [OrdenController::class, 'obtenerOrdenesPorUsuario']);
 
+Route::post('/reportes/ingresos-mensuales', [ReportesController::class, 'ingresosMensuales']);
 
+Route::get('/public/statistics', [DashbordController::class, 'getStatistics']);
