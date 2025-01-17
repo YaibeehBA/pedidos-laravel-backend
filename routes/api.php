@@ -96,21 +96,17 @@ Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(fun
     // Ver un detalle de producto específico por su ID. Esto incluirá información como el producto, color, talla y stock de ese detalle en particular.
 
     // // Ruta para actualizar un detalle de producto existente
-    //  Route::put('{id}', [DetalleProductoController::class, 'update']);
-    // // Actualizar la información de un detalle de producto. Esto puede incluir cambios en precio, stock, color, talla, o incluso cambiar la imagen.
-
+     Route::post('{id}', [DetalleProductoController::class, 'update']);
+     Route::patch('{id}', [DetalleProductoController::class, 'updatePartial']);
     // Ruta para eliminar un detalle de producto específico
     Route::delete('{id}', [DetalleProductoController::class, 'destroy']);
     // Eliminar un detalle de producto por su ID. Esto puede eliminar variaciones de un producto que ya no estén disponibles.
-
+    // Route::post('/images/{id}', 'updateImageById');
 
 });
 
-Route::middleware('auth:sanctum')->prefix('admin/detalles-productos')->group(function () {
-    // Ruta para actualizar un detalle de producto
-    Route::put('{id}', [DetalleProductoController::class, 'update']); // Acepta PUT
-    Route::patch('{id}', [DetalleProductoController::class, 'update']); // Acepta PATCH
-});
+
+
 
 Route::get('/admin/detalle/all', [DetalleProductoController::class, 'all']);
 
@@ -134,3 +130,5 @@ Route::get('/public/ordenes/usuario/{usuarioId}', [OrdenController::class, 'obte
 Route::post('/reportes/ingresos-mensuales', [ReportesController::class, 'ingresosMensuales']);
 
 Route::get('/public/statistics', [DashbordController::class, 'getStatistics']);
+
+

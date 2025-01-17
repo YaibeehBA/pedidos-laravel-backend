@@ -12,7 +12,7 @@ class DetalleProducto extends Model
     protected $fillable = [
         'producto_id',
         'color_id',
-        'talla_id',
+        // 'talla_id',
         'precio_base',
         
         'imagen_url'
@@ -28,8 +28,9 @@ class DetalleProducto extends Model
         return $this->belongsTo(Color::class, 'color_id');
     }
 
-    public function talla()
+    public function tallas()
     {
-        return $this->belongsTo(Talla::class, 'talla_id');
+        return $this->belongsToMany(Talla::class, 'detalle_producto_talla')
+                    ->withTimestamps(); // Para agregar timestamps a la tabla intermedia
     }
 }
