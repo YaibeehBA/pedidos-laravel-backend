@@ -23,13 +23,17 @@ class Orden extends Model
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
+    // public function detalles()
+    // {
+    //     return $this->hasMany(DetalleOrden::class);
+    // }
     public function detalles()
-    {
-        return $this->hasMany(DetalleOrden::class);
-    }
-    public function detallesOrden()
     {
         return $this->hasMany(DetalleOrden::class, 'orden_id');
     }
-
+    public function detallesConTallasYColores()
+    {
+        return $this->hasMany(DetalleOrden::class, 'orden_id')
+            ->with(['detalleProducto', 'detalleProducto.color', 'detalleProducto.tallas']); // Carga productos con colores y tallas
+    }
 }
