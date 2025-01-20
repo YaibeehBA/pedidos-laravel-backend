@@ -31,9 +31,16 @@ class Orden extends Model
     {
         return $this->hasMany(DetalleOrden::class, 'orden_id');
     }
+    // public function detallesConTallasYColores()
+    // {
+    //     return $this->hasMany(DetalleOrden::class, 'orden_id')
+    //         ->with(['detalleProducto', 'detalleProducto.color', 'detalleProducto.tallas']); // Carga productos con colores y tallas
+    // }
     public function detallesConTallasYColores()
-    {
-        return $this->hasMany(DetalleOrden::class, 'orden_id')
-            ->with(['detalleProducto', 'detalleProducto.color', 'detalleProducto.tallas']); // Carga productos con colores y tallas
-    }
+{
+    return $this->hasMany(DetalleOrden::class, 'orden_id')
+        ->with(['detalleProducto.producto:id,nombre', 'detalleProducto.color', 'detalleProducto.tallas']);
+}
+
+
 }

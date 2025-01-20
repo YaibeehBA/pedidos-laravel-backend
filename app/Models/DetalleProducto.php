@@ -33,4 +33,5 @@ class DetalleProducto extends Model
         return $this->belongsToMany(Talla::class, 'detalle_producto_talla')
                     ->withTimestamps(); // Para agregar timestamps a la tabla intermedia
     }
+         
 }

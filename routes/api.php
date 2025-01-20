@@ -119,6 +119,7 @@ Route::get('public/categorias/{id}', [CategoriaController::class, 'show']); // M
 
 Route::post('public/orden', [OrdenController::class, 'crearOrden']); // Obtener la lista de todos los productos
 Route::get('public/ordenes', [OrdenController::class, 'listarOrdenes']);
+Route::get('public/fechas', [OrdenController::class, 'listarFechas']);
 
 Route::put('/public/ordenes/{id}', [OrdenController::class, 'actualizarOrden']);
 Route::delete('/ordenes/{id}', [OrdenController::class, 'eliminarOrden']);

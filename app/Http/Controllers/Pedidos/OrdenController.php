@@ -183,25 +183,95 @@ class OrdenController extends Controller
     //         'orden' => $orden->load('detalles.detalleProducto.producto'),
     //     ]);
     // }
+    // public function crearOrden(Request $request)
+    // {
+    //     // Validar la entrada
+    //     $request->validate([
+    //         'usuario_id' => 'required|exists:users,id',  // Verificar que el usuario existe
+    //         'productos' => 'required|array',              // Asegurarse de que productos es un array
+    //         'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id', // Productos válidos
+    //         'productos.*.cantidad' => 'required|integer|min:1', // La cantidad debe ser al menos 1
+    //         'productos.*.talla_id' => 'required|exists:tallas,id', // Talla válida
+    //     ]);
+
+    //     // Definir una fecha de entrega estática para pruebas
+    //     $fecha_entrega = now()->addDays(3); // Por ejemplo, la fecha de entrega será dentro de 3 días
+
+    //     // Crear la orden
+    //     $orden = Orden::create([
+    //         'usuario_id' => $request->usuario_id,
+    //         'estado' => 'pendiente', // Orden inicialmente con estado pendiente
+    //         'monto_total' => 0, // Inicialmente el monto total es 0, se actualizará después
+    //         'fecha_entrega' => $fecha_entrega,
+    //         'estado_pago' => 'pendiente', // Inicialmente el estado de pago es pendiente
+    //     ]);
+
+    //     // Variable para el monto total de la orden
+    //     $total = 0;
+
+    //     // Recorrer los productos del carrito de compras y crear los detalles de la orden
+    //     foreach ($request->productos as $producto) {
+    //         // Obtener el detalle del producto y la talla correspondiente
+    //         $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
+    //         $talla = Talla::find($producto['talla_id']);
+
+    //         if (!$detalle_producto || !$talla) {
+    //             // Si no existe el producto o la talla, retornar un error
+    //             return response()->json(['mensaje' => 'Producto o talla no válido'], 400);
+    //         }
+
+    //         // Calcular el subtotal para el producto
+    //         $subtotal = round($detalle_producto->precio_base * $producto['cantidad'], 2);
+
+    //         // Crear un nuevo detalle para la orden
+    //         $detalleOrden = DetalleOrden::create([
+    //             'orden_id' => $orden->id,
+    //             'detalles_productos_id' => $producto['detalles_productos_id'],
+    //             'talla_id' => $producto['talla_id'],
+    //             'cantidad' => $producto['cantidad'],
+    //             'precio_unitario' => $detalle_producto->precio_base,
+    //             'subtotal' => $subtotal,
+    //         ]);
+
+    //         // Actualizar el monto total de la orden
+    //         $total += $subtotal;
+    //         $total = round($total, 2);
+    //     }
+
+    //     // Actualizar el monto total de la orden
+    //     $orden->update(['monto_total' => $total]);
+
+    //     // Responder con la orden creada
+    //     return response()->json([
+    //         'mensaje' => 'Orden creada exitosamente.',
+    //         'orden' => $orden,
+    //     ]);
+    // }
+
     public function crearOrden(Request $request)
     {
         // Validar la entrada
         $request->validate([
             'usuario_id' => 'required|exists:users,id',  // Verificar que el usuario existe
-            'productos' => 'required|array',              // Asegurarse de que productos es un array
+            'productos' => 'required|array',            // Asegurarse de que productos es un array
             'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id', // Productos válidos
             'productos.*.cantidad' => 'required|integer|min:1', // La cantidad debe ser al menos 1
             'productos.*.talla_id' => 'required|exists:tallas,id', // Talla válida
         ]);
 
+        // Calcular el total de productos en el carrito
+        $totalProductos = array_reduce($request->productos, function ($carry, $producto) {
+            return $carry + $producto['cantidad'];
+        }, 0);
+
         // Definir una fecha de entrega estática para pruebas
-        $fecha_entrega = now()->addDays(3); // Por ejemplo, la fecha de entrega será dentro de 3 días
+        $fecha_entrega = now()->addDays(3); 
 
         // Crear la orden
         $orden = Orden::create([
             'usuario_id' => $request->usuario_id,
             'estado' => 'pendiente', // Orden inicialmente con estado pendiente
-            'monto_total' => 0, // Inicialmente el monto total es 0, se actualizará después
+            'monto_total' => 0,      
             'fecha_entrega' => $fecha_entrega,
             'estado_pago' => 'pendiente', // Inicialmente el estado de pago es pendiente
         ]);
@@ -220,8 +290,14 @@ class OrdenController extends Controller
                 return response()->json(['mensaje' => 'Producto o talla no válido'], 400);
             }
 
+            // Aplicar rebaja al precio unitario si el total de productos es >= 3
+            $precio_unitario = $detalle_producto->precio_base;
+            if ($totalProductos >= 3) {
+                $precio_unitario = max($precio_unitario - 7, 0); // Asegurarse de que no sea negativo
+            }
+
             // Calcular el subtotal para el producto
-            $subtotal = round($detalle_producto->precio_base * $producto['cantidad'], 2);
+            $subtotal = round($precio_unitario * $producto['cantidad'], 2);
 
             // Crear un nuevo detalle para la orden
             $detalleOrden = DetalleOrden::create([
@@ -229,7 +305,7 @@ class OrdenController extends Controller
                 'detalles_productos_id' => $producto['detalles_productos_id'],
                 'talla_id' => $producto['talla_id'],
                 'cantidad' => $producto['cantidad'],
-                'precio_unitario' => $detalle_producto->precio_base,
+                'precio_unitario' => $precio_unitario,
                 'subtotal' => $subtotal,
             ]);
 
@@ -248,30 +324,30 @@ class OrdenController extends Controller
         ]);
     }
 
+
     public function listarOrdenes(Request $request)
     
-        {
-            // filtrar las órdenes por estado, por ejemplo:
-            $estado = $request->query('estado', null); // El parámetro 'estado' es opcional
-    
-            // Obtener las órdenes, opcionalmente filtradas por estado
-            $query = Orden::with('detallesConTallasYColores'); // Carga las órdenes junto con los detalles (productos con tallas y colores)
-    
-            if ($estado) {
-                // Si hay un estado proporcionado, filtramos las órdenes por ese estado
-                $query->where('estado', $estado);
-            }
-    
-            // Obtener las órdenes 
-            $ordenes = $query->get();
-    
-            // Responder con las órdenes
-            return response()->json([
-                'ordenes' => $ordenes
-            ]);
+    {
+        // filtrar las órdenes por estado, por ejemplo:
+        $estado = $request->query('estado', null); // El parámetro 'estado' es opcional
+
+        // Obtener las órdenes, opcionalmente filtradas por estado
+        $query = Orden::with('detallesConTallasYColores'); // Carga las órdenes junto con los detalles (productos con tallas y colores)
+
+        if ($estado) {
+            // Si hay un estado proporcionado, filtramos las órdenes por ese estado
+            $query->where('estado', $estado);
         }
-        // $ordenes = Orden::with(['detalles.detalleProducto.producto'])->get();
-        // return response()->json($ordenes, 200);
+
+        // Obtener las órdenes 
+        $ordenes = $query->get();
+
+        // Responder con las órdenes
+        return response()->json([
+            'ordenes' => $ordenes
+        ]);
+    }
+       
     
 
     public function actualizarOrden(Request $request, $id)
@@ -427,6 +503,36 @@ class OrdenController extends Controller
             'ordenes' => $ordenes
         ]);
     }
+
+    public function listarFechas(Request $request)
+{
+    // Filtrar las órdenes por estado
+    $estado = $request->query('estado', null); // El parámetro 'estado' es opcional
+
+    // Consultar las órdenes incluyendo el usuario y filtrando solo los campos necesarios
+    $query = Orden::query()->with(['usuario:id,nombre']); // Traer solo 'id' y 'nombre' del usuario
+
+    if ($estado) {
+        // Filtrar las órdenes por estado si está definido
+        $query->where('estado', $estado);
+    }
+
+    // Seleccionar únicamente las columnas necesarias de las órdenes
+    $ordenes = $query->select('id', 'fecha_entrega', 'usuario_id')->get();
+
+    // Mapear los datos para estructurar el resultado
+    $resultado = $ordenes->map(function ($orden) {
+        return [
+            'fecha_entrega' => $orden->fecha_entrega,
+            'usuario' => $orden->usuario ? $orden->usuario->nombre : null, // Devolver 'nombre' si existe el usuario
+        ];
+    });
+
+    // Responder con los datos procesados
+    return response()->json([
+        'ordenes' => $resultado
+    ]);
+}
 
 
 }
