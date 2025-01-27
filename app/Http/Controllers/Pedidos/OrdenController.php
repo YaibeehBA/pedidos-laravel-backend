@@ -9,247 +9,20 @@ use App\Models\Talla;
 use App\Models\DetalleOrden;
 use Illuminate\Http\Request;
 use App\Models\DetalleProducto;
+use App\Services\PayPalService;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use PayPalCheckoutSdk\Core\PayPalHttpClient;
+use PayPalCheckoutSdk\Core\SandboxEnvironment;
+use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 
 class OrdenController extends Controller
 {
-    // public function crearOrden(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'usuario_id' => 'required|exists:users,id',
-    //         'detalles' => 'required|array',
-    //         'detalles.*.producto_id' => 'required|exists:productos,id',
-    //         'detalles.*.cantidad' => 'required|integer|min:1',
-    //     ]);
-
-    //     $usuarioId = $validated['usuario_id'];
-    //     $detalles = $validated['detalles'];
-
-    //     // Calcular la cantidad total del pedido
-    //     $cantidadTotal = array_sum(array_column($detalles, 'cantidad'));
-
-    //     // Definir días según rangos de prendas
-    //     if ($cantidadTotal <= 6) {
-    //         $diasEntrega = 3;
-    //     } elseif ($cantidadTotal <= 15) {
-    //         $diasEntrega = 5;
-    //     } elseif ($cantidadTotal <= 30) {
-    //         $diasEntrega = 7;
-    //     } else {
-    //         return response()->json([
-    //             'message' => 'El pedido supera la cantidad máxima permitida (30 prendas).',
-    //         ], 400);
-    //     }
-
-    //     // Determinar la fecha inicial para el cálculo de entrega
-    //     $ultimaFechaEntrega = Orden::max('fecha_entrega');
-    //     if ($ultimaFechaEntrega) {
-    //         $fechaInicio = Carbon::parse($ultimaFechaEntrega)->isPast() 
-    //             ? now() 
-    //             : Carbon::parse($ultimaFechaEntrega);
-    //     } else {
-    //         $fechaInicio = now(); // No hay órdenes previas
-    //     }
-
-    //     // Calcular la nueva fecha de entrega
-    //     $fechaEntrega = $fechaInicio->copy()->addDays($diasEntrega);
-
-    //     // Crear la orden
-    //     $orden = Orden::create([
-    //         'usuario_id' => $usuarioId,
-    //         'estado' => 'pendiente',
-    //         'monto_total' => 0, // Inicialmente 0
-    //         'fecha_entrega' => $fechaEntrega, // Fecha calculada
-    //         'estado_pago' => 'pendiente',
-    //     ]);
-
-    //     $montoTotal = 0;
-
-    //     // Crear los detalles del pedido
-    //     foreach ($detalles as $detalle) {
-    //         $detalleProducto = DetalleProducto::where('producto_id', $detalle['producto_id'])->first();
-
-    //         if (!$detalleProducto) {
-    //             return response()->json([
-    //                 'message' => 'Producto no encontrado.',
-    //             ], 404);
-    //         }
-
-    //         $precioUnitario = $detalleProducto->precio_base;
-    //         $subtotal = $precioUnitario * $detalle['cantidad'];
-    //         $montoTotal += $subtotal;
-
-    //         DetalleOrden::create([
-    //             'orden_id' => $orden->id,
-    //             'detalles_productos_id' => $detalleProducto->id,
-    //             'cantidad' => $detalle['cantidad'],
-    //             'precio_unitario' => $precioUnitario,
-    //             'subtotal' => $subtotal,
-    //         ]);
-    //     }
-
-    //     // Actualizar el monto total de la orden
-    //     $orden->update(['monto_total' => $montoTotal]);
-
-    //     return response()->json([
-    //         'message' => 'Orden creada exitosamente',
-    //         'orden' => $orden,
-    //     ]);
-    // }
-
-    // public function crearOrden(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'usuario_id' => 'required|exists:users,id',
-    //         'detalles' => 'required|array',
-    //         'detalles.*.variante_id' => 'required|exists:detalles_productos,id', // Cambiado de producto_id a variante_id
-    //         'detalles.*.cantidad' => 'required|integer|min:1',
-    //     ]);
-
-    //     $usuarioId = $validated['usuario_id'];
-    //     $detalles = $validated['detalles'];
-
-    //     // Calcular la cantidad total del pedido
-    //     $cantidadTotal = array_sum(array_column($detalles, 'cantidad'));
-
-    //     // Definir días según rangos de prendas
-    //     if ($cantidadTotal <= 6) {
-    //         $diasEntrega = 3;
-    //     } elseif ($cantidadTotal <= 15) {
-    //         $diasEntrega = 5;
-    //     } elseif ($cantidadTotal <= 30) {
-    //         $diasEntrega = 7;
-    //     } else {
-    //         return response()->json([
-    //             'message' => 'El pedido supera la cantidad máxima permitida (30 prendas).',
-    //         ], 400);
-    //     }
-
-    //     // Determinar la fecha inicial para el cálculo de entrega
-    //     $ultimaFechaEntrega = Orden::max('fecha_entrega');
-    //     if ($ultimaFechaEntrega) {
-    //         $fechaInicio = Carbon::parse($ultimaFechaEntrega)->isPast()
-    //             ? now()
-    //             : Carbon::parse($ultimaFechaEntrega);
-    //     } else {
-    //         $fechaInicio = now();
-    //     }
-
-    //     // Calcular la nueva fecha de entrega
-    //     $fechaEntrega = $fechaInicio->copy()->addDays($diasEntrega);
-
-    //     // Crear la orden
-    //     $orden = Orden::create([
-    //         'usuario_id' => $usuarioId,
-    //         'estado' => 'pendiente',
-    //         'monto_total' => 0,
-    //         'fecha_entrega' => $fechaEntrega,
-    //         'estado_pago' => 'pendiente',
-    //     ]);
-
-    //     $montoTotal = 0;
-
-    //     // Crear los detalles del pedido
-    //     foreach ($detalles as $detalle) {
-    //         // Buscar directamente por el ID de la variante
-    //         $detalleProducto = DetalleProducto::find($detalle['variante_id']);
-
-    //         if (!$detalleProducto) {
-    //             return response()->json([
-    //                 'message' => 'Variante de producto no encontrada.',
-    //             ], 404);
-    //         }
-
-    //         $precioUnitario = $detalleProducto->precio_base;
-    //         $subtotal = $precioUnitario * $detalle['cantidad'];
-    //         $montoTotal += $subtotal;
-
-    //         DetalleOrden::create([
-    //             'orden_id' => $orden->id,
-    //             'detalles_productos_id' => $detalleProducto->id, // Ya es el ID de la variante
-    //             'cantidad' => $detalle['cantidad'],
-    //             'precio_unitario' => $precioUnitario,
-    //             'subtotal' => $subtotal,
-    //         ]);
-    //     }
-
-    //     // Actualizar el monto total de la orden
-    //     $orden->update(['monto_total' => $montoTotal]);
-
-    //     return response()->json([
-    //         'message' => 'Orden creada exitosamente',
-    //         'orden' => $orden->load('detalles.detalleProducto.producto'),
-    //     ]);
-    // }
-    // public function crearOrden(Request $request)
-    // {
-    //     // Validar la entrada
-    //     $request->validate([
-    //         'usuario_id' => 'required|exists:users,id',  // Verificar que el usuario existe
-    //         'productos' => 'required|array',              // Asegurarse de que productos es un array
-    //         'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id', // Productos válidos
-    //         'productos.*.cantidad' => 'required|integer|min:1', // La cantidad debe ser al menos 1
-    //         'productos.*.talla_id' => 'required|exists:tallas,id', // Talla válida
-    //     ]);
-
-    //     // Definir una fecha de entrega estática para pruebas
-    //     $fecha_entrega = now()->addDays(3); // Por ejemplo, la fecha de entrega será dentro de 3 días
-
-    //     // Crear la orden
-    //     $orden = Orden::create([
-    //         'usuario_id' => $request->usuario_id,
-    //         'estado' => 'pendiente', // Orden inicialmente con estado pendiente
-    //         'monto_total' => 0, // Inicialmente el monto total es 0, se actualizará después
-    //         'fecha_entrega' => $fecha_entrega,
-    //         'estado_pago' => 'pendiente', // Inicialmente el estado de pago es pendiente
-    //     ]);
-
-    //     // Variable para el monto total de la orden
-    //     $total = 0;
-
-    //     // Recorrer los productos del carrito de compras y crear los detalles de la orden
-    //     foreach ($request->productos as $producto) {
-    //         // Obtener el detalle del producto y la talla correspondiente
-    //         $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
-    //         $talla = Talla::find($producto['talla_id']);
-
-    //         if (!$detalle_producto || !$talla) {
-    //             // Si no existe el producto o la talla, retornar un error
-    //             return response()->json(['mensaje' => 'Producto o talla no válido'], 400);
-    //         }
-
-    //         // Calcular el subtotal para el producto
-    //         $subtotal = round($detalle_producto->precio_base * $producto['cantidad'], 2);
-
-    //         // Crear un nuevo detalle para la orden
-    //         $detalleOrden = DetalleOrden::create([
-    //             'orden_id' => $orden->id,
-    //             'detalles_productos_id' => $producto['detalles_productos_id'],
-    //             'talla_id' => $producto['talla_id'],
-    //             'cantidad' => $producto['cantidad'],
-    //             'precio_unitario' => $detalle_producto->precio_base,
-    //             'subtotal' => $subtotal,
-    //         ]);
-
-    //         // Actualizar el monto total de la orden
-    //         $total += $subtotal;
-    //         $total = round($total, 2);
-    //     }
-
-    //     // Actualizar el monto total de la orden
-    //     $orden->update(['monto_total' => $total]);
-
-    //     // Responder con la orden creada
-    //     return response()->json([
-    //         'mensaje' => 'Orden creada exitosamente.',
-    //         'orden' => $orden,
-    //     ]);
-    // }
-
+   
+   
     // public function crearOrden(Request $request)
     // {
     //     // Validar la entrada
@@ -266,21 +39,22 @@ class OrdenController extends Controller
     //         return $carry + $producto['cantidad'];
     //     }, 0);
 
-    //         // Llamar al método `calcularFechaEntrega` para obtener la fecha correcta
-    //         $response = Http::timeout(60)->post('http://localhost:8000/api/public/calcular-fecha-entrega', [
-    //             'cantidad' => $totalProductos
-    //         ]);
-            
-            
-    //     // Definir una fecha de entrega estática para pruebas
-    //     // $fecha_entrega = now()->addDays(3); 
-    //      // Comprobar si la respuesta es exitosa
-    //     if ($response->successful()) {
-    //         // Obtener la fecha de entrega
-    //         $fecha_entrega = $response->json('fecha_entrega');  
-    //     } else {
-    //         return response()->json(['mensaje' => 'Error al obtener la fecha de entrega.'], 400);
+    //     $fechaEntregaResponse = $this->calcularFechaEntregaInterna($totalProductos);
+
+    //     // Convertir la respuesta a un objeto PHP desde el contenido JSON
+    //     $fechaEntregaData = json_decode($fechaEntregaResponse->getContent());
+        
+    //     // Comprobar si la respuesta indica error
+    //     if ($fechaEntregaData->status === 'error') {
+    //         return response()->json([
+    //             'mensaje' => $fechaEntregaData->message
+    //         ], 400); // Responder con un código 400 si hay un error
     //     }
+        
+    //     // Acceder únicamente al campo fecha_entrega
+    //     $fecha_entrega = $fechaEntregaData->fecha_entrega;
+            
+    
     //     // Crear la orden
     //     $orden = Orden::create([
     //         'usuario_id' => $request->usuario_id,
@@ -338,96 +112,9 @@ class OrdenController extends Controller
     //     ]);
     // }
    
-    public function crearOrden(Request $request)
-    {
-        // Validar la entrada
-        $request->validate([
-            'usuario_id' => 'required|exists:users,id',  // Verificar que el usuario existe
-            'productos' => 'required|array',            // Asegurarse de que productos es un array
-            'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id', // Productos válidos
-            'productos.*.cantidad' => 'required|integer|min:1', // La cantidad debe ser al menos 1
-            'productos.*.talla_id' => 'required|exists:tallas,id', // Talla válida
-        ]);
-
-        // Calcular el total de productos en el carrito
-        $totalProductos = array_reduce($request->productos, function ($carry, $producto) {
-            return $carry + $producto['cantidad'];
-        }, 0);
-
-        $fechaEntregaResponse = $this->calcularFechaEntregaInterna($totalProductos);
-
-        // Convertir la respuesta a un objeto PHP desde el contenido JSON
-        $fechaEntregaData = json_decode($fechaEntregaResponse->getContent());
-        
-        // Comprobar si la respuesta indica error
-        if ($fechaEntregaData->status === 'error') {
-            return response()->json([
-                'mensaje' => $fechaEntregaData->message
-            ], 400); // Responder con un código 400 si hay un error
-        }
-        
-        // Acceder únicamente al campo fecha_entrega
-        $fecha_entrega = $fechaEntregaData->fecha_entrega;
-            
-    
-        // Crear la orden
-        $orden = Orden::create([
-            'usuario_id' => $request->usuario_id,
-            'estado' => 'pendiente', // Orden inicialmente con estado pendiente
-            'monto_total' => 0,      
-            'fecha_entrega' => $fecha_entrega,
-            'estado_pago' => 'pendiente', // Inicialmente el estado de pago es pendiente
-        ]);
-
-        // Variable para el monto total de la orden
-        $total = 0;
-
-        // Recorrer los productos del carrito de compras y crear los detalles de la orden
-        foreach ($request->productos as $producto) {
-            // Obtener el detalle del producto y la talla correspondiente
-            $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
-            $talla = Talla::find($producto['talla_id']);
-
-            if (!$detalle_producto || !$talla) {
-                // Si no existe el producto o la talla, retornar un error
-                return response()->json(['mensaje' => 'Producto o talla no válido'], 400);
-            }
-
-            // Aplicar rebaja al precio unitario si el total de productos es >= 3
-            $precio_unitario = $detalle_producto->precio_base;
-            if ($totalProductos >= 3) {
-                $precio_unitario = max($precio_unitario - 7, 0); // Asegurarse de que no sea negativo
-            }
-
-            // Calcular el subtotal para el producto
-            $subtotal = round($precio_unitario * $producto['cantidad'], 2);
-
-            // Crear un nuevo detalle para la orden
-            $detalleOrden = DetalleOrden::create([
-                'orden_id' => $orden->id,
-                'detalles_productos_id' => $producto['detalles_productos_id'],
-                'talla_id' => $producto['talla_id'],
-                'cantidad' => $producto['cantidad'],
-                'precio_unitario' => $precio_unitario,
-                'subtotal' => $subtotal,
-            ]);
-
-            // Actualizar el monto total de la orden
-            $total += $subtotal;
-            $total = round($total, 2);
-        }
-
-        // Actualizar el monto total de la orden
-        $orden->update(['monto_total' => $total]);
-
-        // Responder con la orden creada
-        return response()->json([
-            'mensaje' => 'Orden creada exitosamente.',
-            'orden' => $orden,
-        ]);
-    }
    
-   
+
+  
 
     public function listarOrdenes(Request $request)
     
@@ -489,6 +176,7 @@ class OrdenController extends Controller
             'orden' => $orden
         ], 200);
     }
+
     public function eliminarOrden($id)
     {
         $orden = Orden::find($id);
@@ -503,23 +191,7 @@ class OrdenController extends Controller
         return response()->json(['message' => 'Orden eliminada exitosamente'], 200);
     }
 
-    // public function listarOrdenesPorUsuario($usuario_id)
-    // {
-    //     // Obtener todas las órdenes del usuario
-    //     $ordenes = Orden::where('usuario_id', $usuario_id)->get();
-
-    //     // Verificar si el usuario tiene órdenes
-    //     if ($ordenes->isEmpty()) {
-    //         return response()->json([
-    //             'message' => 'No se encontraron órdenes para este usuario.'
-    //         ], 404);
-    //     }
-
-    //     return response()->json([
-    //         'message' => 'Órdenes del usuario obtenidas exitosamente.',
-    //         'ordenes' => $ordenes
-    //     ], 200);
-    // }
+    
     public function listarOrdenesPorUsuario($usuario_id)
     {
         // Obtener todas las órdenes del usuario con los detalles (productos, tallas, y colores)
@@ -540,50 +212,7 @@ class OrdenController extends Controller
         ], 200);
     }
     
-    // public function calcularFechaEntrega(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'cantidad' => 'required|integer|min:1|max:30',  // Validamos la cantidad de prendas
-    //     ], [
-    //         'cantidad.required' => 'El campo cantidad es obligatorio.',
-    //         'cantidad.integer' => 'La cantidad debe ser un número entero.',
-    //         'cantidad.min' => 'La cantidad mínima es 1.',
-    //         'cantidad.max' => 'La cantidad máxima es 30.',
-    //     ]);
-        
-    //     $cantidadTotal = $validated['cantidad'];
-    
-    //     // Definir días según rangos de prendas
-    //     if ($cantidadTotal <= 6) {
-    //         $diasEntrega = 3;
-    //     } elseif ($cantidadTotal <= 15) {
-    //         $diasEntrega = 5;
-    //     } elseif ($cantidadTotal <= 30) {
-    //         $diasEntrega = 7;
-    //     } else {
-    //         return response()->json([
-    //             'message' => 'El pedido supera la cantidad máxima permitida (30 prendas).',
-    //         ], 400);
-    //     }
-    
-    //     // Determinar la fecha inicial para el cálculo de entrega
-    //     $ultimaFechaEntrega = Orden::max('fecha_entrega');
-    //     if ($ultimaFechaEntrega) {
-    //         $fechaInicio = Carbon::parse($ultimaFechaEntrega)->isPast() 
-    //             ? now() 
-    //             : Carbon::parse($ultimaFechaEntrega);
-    //     } else {
-    //         $fechaInicio = now(); // No hay órdenes previas
-    //     }
-    
-    //     // Calcular la nueva fecha de entrega
-    //     $fechaEntrega = $fechaInicio->copy()->addDays($diasEntrega);
-    
-    //     return response()->json([
-    //         'fecha_entrega' => $fechaEntrega->toISOString(),
-    //     ]);
-    // }
-    
+   
 
     public function obtenerOrdenesPorUsuario(Request $request, $usuarioId)
     {
@@ -640,86 +269,7 @@ class OrdenController extends Controller
 
     
     
-    // public function calcularFechaEntrega(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'cantidad' => 'required|integer|min:1|max:30', // Validación de la cantidad
-    //     ], [
-    //         'cantidad.required' => 'El campo cantidad es obligatorio.',
-    //         'cantidad.integer' => 'La cantidad debe ser un número entero.',
-    //         'cantidad.min' => 'La cantidad mínima es 1.',
-    //         'cantidad.max' => 'La cantidad máxima es 30.',
-    //     ]);
     
-    //     $cantidadTotal = $validated['cantidad'];
-    //     $hoy = Carbon::today();
-    //     $pedidosDeHoy = Orden::whereDate('created_at', $hoy)->get(); // Pedidos realizados hoy
-    
-    //     // Inicialización de los cupos
-    //     $cupos = [
-    //         '6' => $pedidosDeHoy->where('cupo', 6)->sum('cantidad'),
-    //         '15' => $pedidosDeHoy->where('cupo', 15)->sum('cantidad'),
-    //         '30' => $pedidosDeHoy->where('cupo', 30)->sum('cantidad'),
-    //     ];
-    
-    //     // Verificar disponibilidad de los cupos
-    //     if ($cantidadTotal <= 6 && $cupos['6'] + $cantidadTotal <= 6) {
-    //         $diasEntrega = 3;
-    //         $cupos['6'] += $cantidadTotal;
-    //     } elseif ($cantidadTotal <= 15 && $cupos['15'] + $cantidadTotal <= 15) {
-    //         $diasEntrega = 6;
-    //         $cupos['15'] += $cantidadTotal;
-    //     } elseif ($cantidadTotal <= 30 && $cupos['30'] + $cantidadTotal <= 30) {
-    //         $diasEntrega = 12;
-    //         $cupos['30'] += $cantidadTotal;
-    //     } else {
-    //         // Todos los cupos están llenos
-    //         return response()->json([
-    //             'message' => 'Lo sentimos, todos los cupos para el día de hoy están llenos. Los cupos se reinician automáticamente mañana. Intente realizar su pedido mañana.',
-    //         ], 400);
-    //     }
-    
-    //     // Calcular la fecha de entrega excluyendo fines de semana y feriados
-    //     $fechaEntrega = $this->obtenerSiguienteDiaLaborable($hoy->copy()->addDays($diasEntrega));
-    
-    //     return response()->json([
-    //         'fecha_entrega' => $fechaEntrega->toISOString(),
-    //         'cupo_asignado' => ($diasEntrega == 3 ? 6 : ($diasEntrega == 6 ? 15 : 30)), // Indica a qué cupo se asignó
-    //     ]);
-    // }
-    
-    // /**
-    //  * Calcular el siguiente día laborable excluyendo fines de semana y feriados
-    //  */
-    // private function obtenerSiguienteDiaLaborable(Carbon $fecha)
-    // {
-    //     $feriados = $this->obtenerFeriadosEcuador($fecha->year);
-    
-    //     while (in_array($fecha->format('Y-m-d'), $feriados) || $fecha->isWeekend()) {
-    //         $fecha->addDay();
-    //     }
-    
-    //     return $fecha;
-    // }
-    
-    // /**
-    //  * Obtener una lista de feriados en Ecuador para el año dado
-    //  */
-    // private function obtenerFeriadosEcuador($year)
-    // {
-    //     return [
-    //         "$year-01-01", // Año Nuevo
-    //         "$year-02-12", // Carnaval (día 1)
-    //         "$year-02-13", // Carnaval (día 2)
-    //         "$year-04-14", // Viernes Santo (ejemplo para 2024, ajusta según reglas)
-    //         "$year-05-01", // Día del Trabajo
-    //         "$year-08-10", // Primer Grito de Independencia
-    //         "$year-11-02", // Día de los Difuntos
-    //         "$year-11-03", // Independencia de Cuenca
-    //         "$year-12-25", // Navidad
-    //     ];
-    // }
-
     private function calcularFeriadosEcuador(int $año): array
     {
         $feriados = [];
@@ -929,5 +479,115 @@ class OrdenController extends Controller
         ]);
     }
     
+    public function crearOrden(Request $request)
+    {
+        $this->validarEntrada($request);
+
+        $totalProductos = $this->calcularTotalProductos($request->productos);
+        
+        $fecha_entrega = $this->obtenerFechaEntrega($totalProductos);
+
+        $orden = $this->crearOrdenBase($request->usuario_id, $fecha_entrega);
+
+        $total = $this->procesarProductos($orden->id, $request->productos, $totalProductos);
+
+        $orden->update(['monto_total' => $total]);
+
+        return response()->json([
+            'mensaje' => 'Orden creada exitosamente.',
+            'orden' => $orden,
+        ]);
+    }
+
+
+    private function validarEntrada(Request $request)
+    {
+        $request->validate([
+            'usuario_id' => 'required|exists:users,id',
+            'productos' => 'required|array',
+            'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id',
+            'productos.*.cantidad' => 'required|integer|min:1',
+            'productos.*.talla_id' => 'required|exists:tallas,id',
+        ]);
+    }
+
+    private function calcularTotalProductos(array $productos): int
+    {
+        return array_reduce($productos, function ($carry, $producto) {
+            return $carry + $producto['cantidad'];
+        }, 0);
+    }
+
+    private function obtenerFechaEntrega(int $totalProductos): string
+    {
+        $fechaEntregaResponse = $this->calcularFechaEntregaInterna($totalProductos);
+        $fechaEntregaData = json_decode($fechaEntregaResponse->getContent());
+
+        if ($fechaEntregaData->status === 'error') {
+            abort(400, $fechaEntregaData->message);
+        }
+
+        return $fechaEntregaData->fecha_entrega;
+    }
+
+    private function crearOrdenBase(int $usuarioId, string $fechaEntrega)
+    {
+        return Orden::create([
+            'usuario_id' => $usuarioId,
+            'estado' => 'pendiente',
+            'monto_total' => 0,
+            'fecha_entrega' => $fechaEntrega,
+            'estado_pago' => 'completado',
+        ]);
+    }
+
+    private function procesarProductos(int $ordenId, array $productos, int $totalProductos): float
+    {
+        $total = 0;
+
+        foreach ($productos as $producto) {
+            $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
+            $talla = Talla::find($producto['talla_id']);
+
+            if (!$detalle_producto || !$talla) {
+                abort(400, 'Producto o talla no válido');
+            }
+
+            $precio_unitario = $this->calcularPrecioUnitario($detalle_producto->precio_base, $totalProductos);
+
+            $subtotal = $this->crearDetalleOrden(
+                $ordenId, 
+                $producto['detalles_productos_id'], 
+                $producto['talla_id'], 
+                $producto['cantidad'], 
+                $precio_unitario
+            );
+
+            $total += $subtotal;
+        }
+
+        return round($total, 2);
+    }
+
+    private function calcularPrecioUnitario(float $precioBase, int $totalProductos): float
+    {
+        return $totalProductos >= 3 ? max($precioBase - 7, 0) : $precioBase;
+    }
+
+    private function crearDetalleOrden(int $ordenId, int $productoId, int $tallaId, int $cantidad, float $precioUnitario): float
+    {
+        $subtotal = round($precioUnitario * $cantidad, 2);
+
+        DetalleOrden::create([
+            'orden_id' => $ordenId,
+            'detalles_productos_id' => $productoId,
+            'talla_id' => $tallaId,
+            'cantidad' => $cantidad,
+            'precio_unitario' => $precioUnitario,
+            'subtotal' => $subtotal,
+        ]);
+
+        return $subtotal;
+    }
 
 }

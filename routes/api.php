@@ -3,6 +3,8 @@
 use App\Models\Orden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\UsuarioController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Reportes\ReportesController;
 use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\Producto\CategoriaController;
 use App\Http\Controllers\Producto\DetalleProductoController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -132,4 +135,7 @@ Route::post('/reportes/ingresos-mensuales', [ReportesController::class, 'ingreso
 
 Route::get('/public/statistics', [DashbordController::class, 'getStatistics']);
 
+// use App\Http\Controllers\PaymentController;
 
+// Route::post('/create-order', [PaymentController::class, 'createOrder']);
+// Route::post('/capture-order', [PaymentController::class, 'captureOrder']);
