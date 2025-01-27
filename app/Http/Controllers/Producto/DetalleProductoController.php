@@ -480,6 +480,7 @@ class DetalleProductoController extends Controller
                                 return [
                                     'id' => $variante->id,
                                     'color' => $variante->color->nombre ?? 'N/A',
+                                    'color_codigo_hex' => $variante->color->codigo_hex ?? null,
                                     'tallas' => $variante->tallas->map(function ($talla) {
                                         return [
                                             'id' => $talla->id,
@@ -513,3 +514,4 @@ class DetalleProductoController extends Controller
     
 
 }
+

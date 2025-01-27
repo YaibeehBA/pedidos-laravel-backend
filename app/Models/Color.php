@@ -13,7 +13,8 @@ class Color extends Model
     protected $table = 'colores';
 
     protected $fillable = [
-        'nombre'
+        'nombre',
+        'codigo_hex'
     ];
 
     public function detalles()
