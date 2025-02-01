@@ -13,7 +13,8 @@ class Orden extends Model
     protected $fillable = [
         'usuario_id', 
         'estado', 
-        'monto_total', 
+        'monto_total',
+        'descuento_total',  
         'fecha_entrega', 
         'estado_pago'
     ];

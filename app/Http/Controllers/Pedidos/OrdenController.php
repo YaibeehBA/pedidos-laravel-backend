@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Orden;
 use App\Models\Talla;
+use App\Models\Descuento;
 use App\Models\DetalleOrden;
 use Illuminate\Http\Request;
 use App\Models\DetalleProducto;
@@ -479,6 +480,119 @@ class OrdenController extends Controller
         ]);
     }
     
+    // public function crearOrden(Request $request)
+    // {
+    //     $this->validarEntrada($request);
+
+    //     $totalProductos = $this->calcularTotalProductos($request->productos);
+        
+    //     $fecha_entrega = $this->obtenerFechaEntrega($totalProductos);
+
+    //     $orden = $this->crearOrdenBase($request->usuario_id, $fecha_entrega);
+
+    //     $total = $this->procesarProductos($orden->id, $request->productos, $totalProductos);
+
+    //     $orden->update(['monto_total' => $total]);
+
+    //     return response()->json([
+    //         'mensaje' => 'Orden creada exitosamente.',
+    //         'orden' => $orden,
+    //     ]);
+    // }
+
+
+    // private function validarEntrada(Request $request)
+    // {
+    //     $request->validate([
+    //         'usuario_id' => 'required|exists:users,id',
+    //         'productos' => 'required|array',
+    //         'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id',
+    //         'productos.*.cantidad' => 'required|integer|min:1',
+    //         'productos.*.talla_id' => 'required|exists:tallas,id',
+    //     ]);
+    // }
+
+    // private function calcularTotalProductos(array $productos): int
+    // {
+    //     return array_reduce($productos, function ($carry, $producto) {
+    //         return $carry + $producto['cantidad'];
+    //     }, 0);
+    // }
+
+    // private function obtenerFechaEntrega(int $totalProductos): string
+    // {
+    //     $fechaEntregaResponse = $this->calcularFechaEntregaInterna($totalProductos);
+    //     $fechaEntregaData = json_decode($fechaEntregaResponse->getContent());
+
+    //     if ($fechaEntregaData->status === 'error') {
+    //         abort(400, $fechaEntregaData->message);
+    //     }
+
+    //     return $fechaEntregaData->fecha_entrega;
+    // }
+
+    // private function crearOrdenBase(int $usuarioId, string $fechaEntrega)
+    // {
+    //     return Orden::create([
+    //         'usuario_id' => $usuarioId,
+    //         'estado' => 'pendiente',
+    //         'monto_total' => 0,
+    //         'fecha_entrega' => $fechaEntrega,
+    //         'estado_pago' => 'completado',
+    //     ]);
+    // }
+
+    // private function procesarProductos(int $ordenId, array $productos, int $totalProductos): float
+    // {
+    //     $total = 0;
+
+    //     foreach ($productos as $producto) {
+    //         $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
+    //         $talla = Talla::find($producto['talla_id']);
+
+    //         if (!$detalle_producto || !$talla) {
+    //             abort(400, 'Producto o talla no válido');
+    //         }
+
+    //         $precio_unitario = $this->calcularPrecioUnitario($detalle_producto->precio_base, $totalProductos);
+
+    //         $subtotal = $this->crearDetalleOrden(
+    //             $ordenId, 
+    //             $producto['detalles_productos_id'], 
+    //             $producto['talla_id'], 
+    //             $producto['cantidad'], 
+    //             $precio_unitario
+    //         );
+
+    //         $total += $subtotal;
+    //     }
+
+    //     return round($total, 2);
+    // }
+
+    // private function calcularPrecioUnitario(float $precioBase, int $totalProductos): float
+    // {
+    //     return $totalProductos >= 3 ? max($precioBase - 7, 0) : $precioBase;
+    // }
+
+    // private function crearDetalleOrden(int $ordenId, int $productoId, int $tallaId, int $cantidad, float $precioUnitario): float
+    // {
+    //     $subtotal = round($precioUnitario * $cantidad, 2);
+
+    //     DetalleOrden::create([
+    //         'orden_id' => $ordenId,
+    //         'detalles_productos_id' => $productoId,
+    //         'talla_id' => $tallaId,
+    //         'cantidad' => $cantidad,
+    //         'precio_unitario' => $precioUnitario,
+    //         'subtotal' => $subtotal,
+    //     ]);
+
+    //     return $subtotal;
+    // }
+
+
+
     public function crearOrden(Request $request)
     {
         $this->validarEntrada($request);
@@ -489,16 +603,26 @@ class OrdenController extends Controller
 
         $orden = $this->crearOrdenBase($request->usuario_id, $fecha_entrega);
 
-        $total = $this->procesarProductos($orden->id, $request->productos, $totalProductos);
+        // Calcular descuentos
+        $descuentosResponse = $this->calcularDescuentos($request->productos);
+        $descuentosData = json_decode($descuentosResponse->getContent(), true);
 
-        $orden->update(['monto_total' => $total]);
+        if ($descuentosData['status'] === 'error') {
+            abort(400, $descuentosData['message']);
+        }
+
+        $total = $this->procesarProductosConDescuentos($orden->id, $request->productos, $descuentosData);
+
+        $orden->update([
+            'monto_total' => $total,
+            'descuento_total' => $descuentosData['descuento_total']
+        ]);
 
         return response()->json([
             'mensaje' => 'Orden creada exitosamente.',
             'orden' => $orden,
         ]);
     }
-
 
     private function validarEntrada(Request $request)
     {
@@ -541,7 +665,21 @@ class OrdenController extends Controller
         ]);
     }
 
-    private function procesarProductos(int $ordenId, array $productos, int $totalProductos): float
+    private function calcularDescuentos(array $productos)
+    {
+        $request = new Request([
+            'productos' => array_map(function ($producto) {
+                return [
+                    'id' => $producto['detalles_productos_id'],
+                    'cantidad' => $producto['cantidad']
+                ];
+            }, $productos)
+        ]);
+
+        return $this->aplicarDescuento($request);
+    }
+
+    private function procesarProductosConDescuentos(int $ordenId, array $productos, array $descuentosData): float
     {
         $total = 0;
 
@@ -553,14 +691,24 @@ class OrdenController extends Controller
                 abort(400, 'Producto o talla no válido');
             }
 
-            $precio_unitario = $this->calcularPrecioUnitario($detalle_producto->precio_base, $totalProductos);
+            // Buscar el producto en la respuesta de descuentos
+            $productoConDescuento = collect($descuentosData['productos'])->firstWhere('producto_id', $producto['detalles_productos_id']);
 
-            $subtotal = $this->crearDetalleOrden(
+            if (!$productoConDescuento) {
+                abort(400, 'Producto no encontrado en la respuesta de descuentos');
+            }
+
+            $precio_unitario = $productoConDescuento['precio_final'] / $producto['cantidad'];
+            $descuento_unitario = $productoConDescuento['descuento'] / $producto['cantidad'];
+
+            $subtotal = $this->crearDetalleOrdenConDescuento(
                 $ordenId, 
                 $producto['detalles_productos_id'], 
                 $producto['talla_id'], 
                 $producto['cantidad'], 
-                $precio_unitario
+                $detalle_producto->precio_base,
+                $precio_unitario,
+                $descuento_unitario
             );
 
             $total += $subtotal;
@@ -569,12 +717,7 @@ class OrdenController extends Controller
         return round($total, 2);
     }
 
-    private function calcularPrecioUnitario(float $precioBase, int $totalProductos): float
-    {
-        return $totalProductos >= 3 ? max($precioBase - 7, 0) : $precioBase;
-    }
-
-    private function crearDetalleOrden(int $ordenId, int $productoId, int $tallaId, int $cantidad, float $precioUnitario): float
+    private function crearDetalleOrdenConDescuento(int $ordenId, int $productoId, int $tallaId, int $cantidad, float $precioBase, float $precioUnitario, float $descuentoUnitario): float
     {
         $subtotal = round($precioUnitario * $cantidad, 2);
 
@@ -583,11 +726,123 @@ class OrdenController extends Controller
             'detalles_productos_id' => $productoId,
             'talla_id' => $tallaId,
             'cantidad' => $cantidad,
+            'precio_base' => $precioBase,
             'precio_unitario' => $precioUnitario,
+            'descuento_unitario' => $descuentoUnitario,
             'subtotal' => $subtotal,
         ]);
 
         return $subtotal;
     }
 
+    public function aplicarDescuento(Request $request)
+    {
+        $validated = $request->validate([
+            'productos' => 'required|array',
+            'productos.*.id' => 'required|exists:detalles_productos,id',
+            'productos.*.cantidad' => 'required|integer|min:1'
+        ]);
+    
+        try {
+            // Sumar el total de unidades compradas
+            $cantidadTotal = collect($validated['productos'])->sum('cantidad');
+    
+            // Obtener descuentos globales
+            $descuentosGlobales = Descuento::where('activo', true)
+                ->where('cantidad_minima', '<=', $cantidadTotal)
+                ->where('aplica_todos_productos', true)
+                ->get();
+    
+            // Obtener IDs de productos seleccionados
+            $productosIds = collect($validated['productos'])->pluck('id')->toArray();
+    
+            // Obtener descuentos específicos para los productos seleccionados
+            $descuentosEspecificos = Descuento::where('activo', true)
+                ->where('cantidad_minima', '<=', $cantidadTotal)
+                ->where('aplica_todos_productos', false)
+                ->whereHas('detallesProductos', function ($query) use ($productosIds) {
+                    $query->whereIn('detalle_producto_id', $productosIds);
+                })
+                ->get();
+    
+            // Combinar descuentos válidos
+            $descuentos = $descuentosGlobales->merge($descuentosEspecificos)
+                ->filter(fn($descuento) => $descuento->esValido());
+    
+            // Calcular precios de los productos
+            $productosConDescuento = [];
+            $subtotalGeneral = 0;
+    
+            foreach ($validated['productos'] as $productoData) {
+                $detalleProducto = DetalleProducto::find($productoData['id']);
+                $subtotalProducto = $detalleProducto->precio_base * $productoData['cantidad'];
+                $subtotalGeneral += $subtotalProducto;
+    
+                // Filtrar los descuentos específicos para este producto
+                $descuentosProducto = $descuentosEspecificos->filter(function ($descuento) use ($detalleProducto) {
+                    return $descuento->detallesProductos->contains('id', $detalleProducto->id);
+                });
+    
+                // Separar descuentos por monto fijo y porcentaje
+                $montoFijo = $descuentosProducto->where('tipo', 'monto_fijo')->sum(fn($descuento) => $descuento->valor);
+                $porcentaje = $descuentosProducto->where('tipo', 'porcentaje')->sum('valor');
+    
+                // Calcular descuento total (monto fijo + porcentaje aplicado al precio base)
+                $descuentoEspecifico = $montoFijo + (($porcentaje / 100) * $subtotalProducto);
+    
+                $productosConDescuento[] = [
+                    'producto_id' => $detalleProducto->id,
+                    'nombre' => $detalleProducto->producto->nombre,
+                    'cantidad' => $productoData['cantidad'],
+                    'precio_original' => $subtotalProducto,
+                    'precio_base' => $detalleProducto->precio_base,
+                    'descuento_especifico' => $descuentoEspecifico
+                ];
+            }
+    
+            // Calcular descuentos globales (separando monto fijo y porcentaje)
+            $descuentoGlobalTotal = 0;
+            foreach ($descuentosGlobales as $descuento) {
+                if ($descuento->tipo == 'monto_fijo') {
+                    $descuentoGlobalTotal += $descuento->valor * $cantidadTotal;
+                } elseif ($descuento->tipo == 'porcentaje') {
+                    $descuentoGlobalTotal += ($descuento->valor / 100) * $subtotalGeneral;
+                }
+            }
+    
+            // Aplicar y distribuir descuentos globales
+            $descuentoTotal = 0;
+            foreach ($productosConDescuento as &$producto) {
+                // Aplicar descuento global proporcionalmente
+                $proporcion = $producto['precio_original'] / $subtotalGeneral;
+                $descuentoGlobal = round($descuentoGlobalTotal * $proporcion, 2);
+    
+                // Combinar descuentos globales y específicos
+                $producto['descuento'] = $producto['descuento_especifico'] + $descuentoGlobal;
+                $producto['precio_final'] = $producto['precio_original'] - $producto['descuento'];
+                $descuentoTotal += $producto['descuento'];
+    
+                // Limpiar campo temporal
+                unset($producto['descuento_especifico']);
+            }
+    
+            // Respuesta con datos procesados
+            return response()->json([
+                'status' => 'success',
+                'descuento_aplicado' => $descuentoTotal > 0,
+                'cantidad_total' => $cantidadTotal,
+                'descuento_total' => $descuentoTotal,
+                'productos' => $productosConDescuento
+            ]);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al calcular el descuento',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
+

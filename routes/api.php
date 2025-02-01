@@ -16,6 +16,7 @@ use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Reportes\ReportesController;
 use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\Producto\CategoriaController;
+use App\Http\Controllers\Descuento\DescuentoController;
 use App\Http\Controllers\Producto\DetalleProductoController;
 
 
@@ -139,3 +140,8 @@ Route::get('/public/statistics', [DashbordController::class, 'getStatistics']);
 
 // Route::post('/create-order', [PaymentController::class, 'createOrder']);
 // Route::post('/capture-order', [PaymentController::class, 'captureOrder']);
+
+Route::apiResource('descuentos', DescuentoController::class);
+Route::patch('descuentos/{descuento}/toggle-active', [DescuentoController::class, 'toggleActive']);
+// Route::post('detalle-producto/{detalleProducto}/aplicar-descuento', [DescuentoController::class, 'aplicarDescuento']);
+Route::post('aplicar-descuento', [DescuentoController::class, 'aplicarDescuento']);
