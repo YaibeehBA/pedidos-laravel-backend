@@ -146,7 +146,7 @@ class OrdenController extends Controller
     {
         // Validar los datos entrantes
         $validated = $request->validate([
-            'estado' => 'nullable|in:pendiente,aprobada,rechazada,pagada,entregada',
+            'estado' => 'nullable|in:Pagado,Entregando,Atrasado',
             'estado_pago' => 'nullable|in:pendiente,completado',
         ]);
 
@@ -658,7 +658,7 @@ class OrdenController extends Controller
     {
         return Orden::create([
             'usuario_id' => $usuarioId,
-            'estado' => 'pendiente',
+            'estado' => 'Pagado',
             'monto_total' => 0,
             'fecha_entrega' => $fechaEntrega,
             'estado_pago' => 'completado',
@@ -844,5 +844,6 @@ class OrdenController extends Controller
         }
     }
 }
+
 
 
