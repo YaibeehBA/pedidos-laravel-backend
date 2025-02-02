@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Notifications\OrdenPagadaNotification;
+use App\Notifications\OrdenAtrasadaNotification;
+use App\Notifications\OrdenEntregadaNotification;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 
 class Orden extends Model
 {
@@ -43,5 +47,17 @@ class Orden extends Model
         ->with(['detalleProducto.producto:id,nombre', 'detalleProducto.color', 'detalleProducto.tallas']);
 }
 
+public function notifyStatusUpdate()
+    {
+        if ($this->estado === 'Atrasado') {
+            $this->usuario->notify(new OrdenAtrasadaNotification($this));
+            $this->fecha_entrega = Carbon::parse($this->fecha_entrega)->addDay();
+            $this->save();
+        } elseif ($this->estado === 'Entregando') {
+            $this->usuario->notify(new OrdenEntregadaNotification($this));
+        } elseif ($this->estado === 'Pagado') {
+            $this->usuario->notify(new OrdenPagadaNotification($this));
+        }
+    }
 
 }

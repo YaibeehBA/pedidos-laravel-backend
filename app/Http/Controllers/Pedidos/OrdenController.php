@@ -142,41 +142,84 @@ class OrdenController extends Controller
        
     
 
+    // public function actualizarOrden(Request $request, $id)
+    // {
+    //     // Validar los datos entrantes
+    //     $validated = $request->validate([
+    //         'estado' => 'nullable|in:Pagado,Entregando,Atrasado',
+    //         'estado_pago' => 'nullable|in:pendiente,completado',
+    //     ]);
+
+    //     // Buscar la orden por su ID
+    //     $orden = Orden::find($id);
+
+    //     // Si no encuentra la orden, devolver un error 404
+    //     if (!$orden) {
+    //         return response()->json([
+    //             'message' => 'Orden no encontrada'
+    //         ], 404);
+    //     }
+
+    //     // Actualizar los campos válidos según los datos enviados
+    //     if ($request->has('estado')) {
+    //         $orden->estado = $validated['estado'];
+    //     }
+    //     if ($request->has('estado_pago')) {
+    //         $orden->estado_pago = $validated['estado_pago'];
+    //     }
+
+    //     // Guardar cambios en la base de datos
+    //     $orden->save();
+
+    //     // Responder con un mensaje de éxito y los detalles actualizados de la orden
+    //     return response()->json([
+    //         'message' => 'Orden actualizada exitosamente',
+    //         'orden' => $orden
+    //     ], 200);
+    // }
+
     public function actualizarOrden(Request $request, $id)
-    {
-        // Validar los datos entrantes
-        $validated = $request->validate([
-            'estado' => 'nullable|in:Pagado,Entregando,Atrasado',
-            'estado_pago' => 'nullable|in:pendiente,completado',
-        ]);
+{
+    // Validar los datos entrantes
+    $validated = $request->validate([
+        'estado' => 'nullable|in:Pagado,Entregando,Atrasado',
+        'estado_pago' => 'nullable|in:pendiente,completado',
+    ]);
 
-        // Buscar la orden por su ID
-        $orden = Orden::find($id);
+    // Buscar la orden por su ID
+    $orden = Orden::find($id);
 
-        // Si no encuentra la orden, devolver un error 404
-        if (!$orden) {
-            return response()->json([
-                'message' => 'Orden no encontrada'
-            ], 404);
-        }
-
-        // Actualizar los campos válidos según los datos enviados
-        if ($request->has('estado')) {
-            $orden->estado = $validated['estado'];
-        }
-        if ($request->has('estado_pago')) {
-            $orden->estado_pago = $validated['estado_pago'];
-        }
-
-        // Guardar cambios en la base de datos
-        $orden->save();
-
-        // Responder con un mensaje de éxito y los detalles actualizados de la orden
+    // Si no encuentra la orden, devolver un error 404
+    if (!$orden) {
         return response()->json([
-            'message' => 'Orden actualizada exitosamente',
-            'orden' => $orden
-        ], 200);
+            'message' => 'Orden no encontrada'
+        ], 404);
     }
+
+    // Actualizar los campos válidos según los datos enviados
+    $estadoAnterior = $orden->estado; // Guardamos el estado anterior
+
+    if ($request->has('estado')) {
+        $orden->estado = $validated['estado'];
+    }
+    if ($request->has('estado_pago')) {
+        $orden->estado_pago = $validated['estado_pago'];
+    }
+
+    // Guardar cambios en la base de datos
+    $orden->save();
+
+    // Solo enviar notificación si el estado ha cambiado
+    if ($estadoAnterior !== $orden->estado) {
+        $orden->notifyStatusUpdate();
+    }
+
+    // Responder con un mensaje de éxito y los detalles actualizados de la orden
+    return response()->json([
+        'message' => 'Orden actualizada exitosamente',
+        'orden' => $orden
+    ], 200);
+}
 
     public function eliminarOrden($id)
     {

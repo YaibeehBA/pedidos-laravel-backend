@@ -18,6 +18,7 @@ use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\Producto\CategoriaController;
 use App\Http\Controllers\Descuento\DescuentoController;
 use App\Http\Controllers\Producto\DetalleProductoController;
+use App\Http\Controllers\Notificacion\NotificacionController;
 
 
 /*
@@ -40,6 +41,7 @@ Route::post('/auth/forgot-password', [LoginController::class, 'forgotPassword'])
 Route::post('/auth/reset-password', [LoginController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->get('/auth/logout', [LogoutController::class, 'logoutUser']);
+Route::middleware('auth:sanctum')->get('/notificaciones', [NotificacionController::class, 'index']);
 
 
 
