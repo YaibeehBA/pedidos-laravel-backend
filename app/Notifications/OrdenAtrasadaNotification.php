@@ -3,15 +3,19 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use Carbon\Carbon;
 
 class OrdenAtrasadaNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $orden;
+    protected $orden;
+    
+    public $tries = 3;
+    public $timeout = 30;
 
     public function __construct($orden)
     {
@@ -20,24 +24,38 @@ class OrdenAtrasadaNotification extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['database', 'mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail($notifiable)
-    {
-        return (new MailMessage)
-            ->subject('Orden Atrasada')
-            ->line("Tu orden #{$this->orden->id} se ha atrasado. La nueva fecha de entrega es {$this->orden->fecha_entrega}.")
-            ->action('Ver mis pedidos', url(env('FRONTEND_URL') . '/Pedidos'))
-            ->line('Gracias por tu paciencia.');
-    }
+{
+    $fecha_entrega = Carbon::parse($this->orden->fecha_entrega)
+        ->timezone(config('app.timezone'))
+        ->format('j/n/Y');
 
-    public function toArray($notifiable)
-    {
-        return [
-            'order_id' => $this->orden->id,
-            'estado' => 'Atrasado',
-            'mensaje' => "Tu orden #{$this->orden->id} se ha atrasado.",
-        ];
-    }
+    return (new MailMessage)
+        ->subject('⚠️ Tu orden #'.$this->orden->id.' está atrasada')
+        ->greeting('Hola ' . $this->orden->usuario->nombre . ' ' . $this->orden->usuario->apellido)
+        ->line("Lamentamos informarte que tu orden #{$this->orden->id} ha sufrido un retraso en la entrega.")
+        ->line("Fecha estimada de entrega: {$fecha_entrega}")
+        ->line("Estamos trabajando para que tu pedido llegue lo antes posible.")
+        ->action('Ver mi pedido', url(config('app.frontend_url') . '/Pedidos'))
+        ->line('Gracias por tu paciencia y comprensión.')
+        ->salutation('Saludos, ' . config('app.name'));
+}
+
+public function toArray($notifiable)
+{
+    $fecha_entrega = Carbon::parse($this->orden->fecha_entrega)
+        ->timezone(config('app.timezone'))
+        ->format('j/n/Y');
+
+    return [
+        'orden_id' => $this->orden->id,
+        'estado' => 'Atrasado',
+        'fecha' => $fecha_entrega,
+        'mensaje' => "Tu orden #{$this->orden->id} está retrasada. Estamos trabajando en la entrega."
+    ];
+}
+
 }

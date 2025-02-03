@@ -42,6 +42,7 @@ Route::post('/auth/reset-password', [LoginController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->get('/auth/logout', [LogoutController::class, 'logoutUser']);
 Route::middleware('auth:sanctum')->get('/notificaciones', [NotificacionController::class, 'index']);
+Route::middleware('auth:sanctum')->delete('/notificaciones', [NotificacionController::class, 'destroy']);
 
 
 
