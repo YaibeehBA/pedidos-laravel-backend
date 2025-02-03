@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tu orden #{{ $orden->id }} está atrasada</title>
+    <title>Orden en Entrega #{{ $orden->id }}</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -20,7 +20,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .header {
-            background-color: #dc3545; /* Rojo para indicar alerta */
+            background-color: #1a56db;
             color: #ffffff;
             padding: 20px;
             text-align: center;
@@ -50,13 +50,13 @@
             padding: 12px 24px;
             font-size: 16px;
             color: #ffffff;
-            background-color: #dc3545;
+            background-color: #1a56db;
             border-radius: 6px;
             text-decoration: none;
             transition: background-color 0.3s ease;
         }
         .button:hover {
-            background-color: #c82333;
+            background-color: #1649b3;
         }
         .footer {
             text-align: center;
@@ -66,7 +66,7 @@
             font-size: 14px;
         }
         .footer a {
-            color: #dc3545;
+            color: #1a56db;
             text-decoration: none;
         }
         .footer a:hover {
@@ -78,30 +78,32 @@
     <div class="email-container">
         <!-- Encabezado -->
         <div class="header">
-            <h1>⚠️ Tu orden #{{ $orden->id }} está atrasada</h1>
+            <h1>Tu orden está en camino 🚚</h1>
         </div>
 
         <!-- Contenido -->
         <div class="content">
             <h2>Hola {{ strtoupper($orden->usuario->nombre) }} {{ strtoupper($orden->usuario->apellido) }},</h2>
 
-            <p>Lamentamos informarte que tu orden <strong>#{{ $orden->id }}</strong> ha sufrido un retraso en la entrega. Sabemos lo importante que es para ti recibir tu pedido a tiempo, y nos disculpamos sinceramente por este inconveniente.</p>
-
-            <p><strong>Fecha estimada de entrega:</strong> {{ Carbon\Carbon::parse($orden->fecha_entrega)->addDay()->format('j/n/Y') }}</p>
-
-
-            <p>En <strong>New Blessings</strong>, estamos trabajando arduamente para resolver esta situación y asegurarnos de que tu pedido llegue lo antes posible. Valoramos tu paciencia y comprensión durante este proceso.</p>
+            
+            <p>Nos complace informarte que tu orden <strong>#{{ $orden->id }}</strong> está en proceso de entrega.</p>
+            <p>Pronto recibirás tu pedido. ¡Gracias por confiar en <strong>New Blessings</strong>!</p>
 
             <!-- Botón de acción -->
-            <a href="{{ url(env('FRONTEND_URL') . '/Pedidos') }}" class="button" style="color: white;">Ver el estado de mi pedido</a>
+            <a href="{{ url(env('FRONTEND_URL') . '/Pedidos') }}" 
+                class="button" 
+                style="color: white;">
+                Ver mis pedidos
+            </a>
 
-            <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos. Estamos aquí para ayudarte.</p>
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
         </div>
 
         <!-- Pie de página -->
         <div class="footer">
             <p>© {{ date('Y') }} <strong>New Blessings</strong>. Todos los derechos reservados.</p>
             <p><a href="{{ url(env('FRONTEND_URL')) }}">Visita nuestro sitio web</a></p>
+
         </div>
     </div>
 </body>
