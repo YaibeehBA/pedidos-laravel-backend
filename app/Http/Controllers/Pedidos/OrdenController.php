@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
+use App\Notifications\OrdenPagadaNotification;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 
@@ -701,6 +702,11 @@ class OrdenController extends Controller
             'monto_total' => $total,
             'descuento_total' => $descuentosData['descuento_total']
         ]);
+        // Obtener el usuario asociado a la orden
+        $usuario = User::find($request->usuario_id);
+
+        // Disparar la notificación al usuario
+        $usuario->notify(new OrdenPagadaNotification($orden));
 
         return response()->json([
             'mensaje' => 'Orden creada exitosamente.',
