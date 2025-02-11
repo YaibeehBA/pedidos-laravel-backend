@@ -19,6 +19,7 @@ use App\Http\Controllers\Producto\CategoriaController;
 use App\Http\Controllers\Descuento\DescuentoController;
 use App\Http\Controllers\Producto\DetalleProductoController;
 use App\Http\Controllers\Notificacion\NotificacionController;
+use App\Http\Controllers\Notificacion\NotificacionesAdminController;
 
 
 /*
@@ -148,3 +149,9 @@ Route::apiResource('descuentos', DescuentoController::class);
 Route::patch('descuentos/{descuento}/toggle-active', [DescuentoController::class, 'toggleActive']);
 // Route::post('detalle-producto/{detalleProducto}/aplicar-descuento', [DescuentoController::class, 'aplicarDescuento']);
 Route::post('aplicar-descuento', [DescuentoController::class, 'aplicarDescuento']);
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/admin/notificaciones', [NotificacionesAdminController::class, 'obtenerNotificaciones']);
+    Route::delete('/admin/notificaciones/{id}', [NotificacionesAdminController::class, 'eliminarNotificacion']);
+    Route::patch('/admin/notificaciones/{id}/leida', [NotificacionesAdminController::class, 'marcarComoLeida']);
+});

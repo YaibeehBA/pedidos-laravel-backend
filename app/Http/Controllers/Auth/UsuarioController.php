@@ -42,9 +42,26 @@ class UsuarioController extends Controller
         ];
     
         $messages = [
+            'nombre.string' => 'El nombre debe ser una cadena de texto.',
+            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
+        
+            'apellido.string' => 'El apellido debe ser una cadena de texto.',
+            'apellido.max' => 'El apellido no puede tener más de 100 caracteres.',
+        
+            'email.string' => 'El correo electrónico debe ser una cadena de texto.',
+            'email.max' => 'El correo electrónico no puede tener más de 100 caracteres.',
             'email.unique' => 'El correo electrónico ya está registrado.',
+        
+            'password.string' => 'La contraseña debe ser una cadena de texto.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+        
+            'celular.digits' => 'El número de celular debe tener exactamente 10 dígitos.',
+            'celular.regex' => 'El número de celular solo puede contener números.',
             'celular.unique' => 'El número de celular ya está registrado.',
+        
+            'esadmin.boolean' => 'El valor de administrador debe ser verdadero o falso.',
         ];
+        
     
         // Validar los datos enviados
         $validator = Validator::make($request->all(), $rules, $messages);

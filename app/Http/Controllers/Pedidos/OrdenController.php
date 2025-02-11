@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
+use App\Notifications\NuevoPedidoNotification;
 use App\Notifications\OrdenPagadaNotification;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Orders\OrdersGetRequest;
@@ -707,7 +708,14 @@ class OrdenController extends Controller
 
         // Disparar la notificación al usuario
         $usuario->notify(new OrdenPagadaNotification($orden));
+        // Obtener el administrador (puedes usar un rol o un usuario específico)
+        $admins = User::where('esadmin', true)->get();
 
+        if ($admins->isNotEmpty()) {
+            $admins->each(function($admin) use ($orden) {
+                $admin->notify(new NuevoPedidoNotification($orden));
+            });
+        }
         return response()->json([
             'mensaje' => 'Orden creada exitosamente.',
             'orden' => $orden,

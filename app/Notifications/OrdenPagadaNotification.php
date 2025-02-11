@@ -54,7 +54,8 @@ class OrdenPagadaNotification extends Notification implements ShouldQueue
         return [
             'orden_id' => $this->orden->id,
             'estado' => 'Pagado',
-            'mensaje' => "Tu orden #{$this->orden->id} está en proceso."
+            'mensaje' => "¡Gracias por tu compra! Tu orden #{$this->orden->id} ha sido confirmada y está en proceso de producción. Te notificaremos cuando esté lista para el envío."
+
         ];
     }
 }
