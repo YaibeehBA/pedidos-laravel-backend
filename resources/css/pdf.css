@@ -1,0 +1,119 @@
+body {
+    font-family: 'DejaVu Sans', Arial, sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    padding: 20px;
+}
+
+.header {
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.company-info {
+    float: left;
+    width: 50%;
+}
+
+.company-info h1 {
+    color: #2563eb;
+    font-size: 24px;
+    margin: 0;
+}
+
+.company-info p {
+    color: #666;
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.orden-info {
+    float: right;
+    width: 40%;
+    text-align: right;
+}
+
+.orden-info h2 {
+    color: #2563eb;
+    font-size: 20px;
+    margin: 0;
+}
+
+.orden-info-details {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 5px;
+}
+
+.cliente-info {
+    clear: both;
+    padding-top: 30px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: #2563eb;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th {
+    background-color: #2563eb;
+    color: white;
+    padding: 12px;
+    font-weight: normal;
+    text-align: left;
+    font-size: 14px;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.total-section {
+    margin-top: 30px;
+    text-align: right;
+}
+
+.total-line {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.total-final {
+    font-size: 18px;
+    color: #2563eb;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.footer {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+}
+
+.qr-code {
+    text-align: center;
+    margin-top: 20px;
+}

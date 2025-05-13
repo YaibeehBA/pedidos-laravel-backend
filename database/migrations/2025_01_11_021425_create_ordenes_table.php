@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ordenes', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('usuario_id');
-            $table->enum('estado', ['pendiente', 'aprobada', 'rechazada', 'pagada', 'entregada'])->default('pendiente');
+            $table->enum('estado', ['Pagado', 'Entregando', 'Atrasado'])->default('Pagado');
             $table->decimal('monto_total', 10, 2);
             $table->date('fecha_entrega')->nullable();
             $table->enum('estado_pago', ['pendiente', 'completado'])->default('pendiente');

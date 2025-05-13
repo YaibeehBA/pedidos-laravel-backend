@@ -31,7 +31,9 @@ class ColorController extends Controller
     {
         try {
             $request->validate([
-                'nombre' => 'required|string|max:50|unique:colores'
+                'nombre' => 'required|string|max:50|unique:colores',
+                'codigo_hex' => 'nullable|string'
+
             ]);
 
             $color = Color::create($request->all());
@@ -73,7 +75,11 @@ class ColorController extends Controller
     {
         try {
             $request->validate([
-                'nombre' => 'string|max:50|unique:colores,nombre,' . $id
+                'nombre' => 'string|max:50|unique:colores,nombre,' . $id,
+                'codigo_hex' => 'nullable|string'
+
+
+
             ]);
 
             $color = Color::findOrFail($id);

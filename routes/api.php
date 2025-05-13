@@ -3,6 +3,8 @@
 use App\Models\Orden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\UsuarioController;
@@ -14,7 +16,11 @@ use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Reportes\ReportesController;
 use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\Producto\CategoriaController;
+use App\Http\Controllers\Descuento\DescuentoController;
 use App\Http\Controllers\Producto\DetalleProductoController;
+use App\Http\Controllers\Notificacion\NotificacionController;
+use App\Http\Controllers\Notificacion\NotificacionesAdminController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +42,8 @@ Route::post('/auth/forgot-password', [LoginController::class, 'forgotPassword'])
 Route::post('/auth/reset-password', [LoginController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->get('/auth/logout', [LogoutController::class, 'logoutUser']);
+Route::middleware('auth:sanctum')->get('/notificaciones', [NotificacionController::class, 'index']);
+Route::middleware('auth:sanctum')->delete('/notificaciones', [NotificacionController::class, 'destroy']);
 
 
 
@@ -132,4 +140,18 @@ Route::post('/reportes/ingresos-mensuales', [ReportesController::class, 'ingreso
 
 Route::get('/public/statistics', [DashbordController::class, 'getStatistics']);
 
+// use App\Http\Controllers\PaymentController;
 
+// Route::post('/create-order', [PaymentController::class, 'createOrder']);
+// Route::post('/capture-order', [PaymentController::class, 'captureOrder']);
+
+Route::apiResource('descuentos', DescuentoController::class);
+Route::patch('descuentos/{descuento}/toggle-active', [DescuentoController::class, 'toggleActive']);
+// Route::post('detalle-producto/{detalleProducto}/aplicar-descuento', [DescuentoController::class, 'aplicarDescuento']);
+Route::post('aplicar-descuento', [DescuentoController::class, 'aplicarDescuento']);
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/admin/notificaciones', [NotificacionesAdminController::class, 'obtenerNotificaciones']);
+    Route::delete('/admin/notificaciones/{id}', [NotificacionesAdminController::class, 'eliminarNotificacion']);
+    Route::patch('/admin/notificaciones/{id}/leida', [NotificacionesAdminController::class, 'marcarComoLeida']);
+});

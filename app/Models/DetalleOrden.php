@@ -15,7 +15,9 @@ class DetalleOrden extends Model
         'detalles_productos_id', 
         'talla_id',
         'cantidad', 
+        'precio_base', 
         'precio_unitario', 
+        'descuento_unitario',
         'subtotal'
     ];
 

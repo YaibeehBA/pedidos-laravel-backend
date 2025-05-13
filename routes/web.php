@@ -20,3 +20,5 @@ Route::get('/reset-password', function () {
     // Redirige al frontend de Vue con el token
     return redirect('http://localhost:5173/RestablecerContrasena?token=' . request('token'));
 })-> name('reset-password');
+
+

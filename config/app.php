@@ -186,5 +186,8 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+    
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
 
 ];
