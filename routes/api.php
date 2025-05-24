@@ -5,7 +5,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\PayPalController;
-use App\Http\Controllers\Carrusel\CarruselController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\UsuarioController;
@@ -13,6 +12,8 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Pedidos\OrdenController;
 use App\Http\Controllers\Producto\ColorController;
 use App\Http\Controllers\Producto\TallaController;
+use App\Http\Controllers\Empresa\EmpresaController;
+use App\Http\Controllers\Carrusel\CarruselController;
 use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Reportes\ReportesController;
 use App\Http\Controllers\Dashboard\DashbordController;
@@ -166,3 +167,13 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 });
 
 Route::get('carrusel-publico', [CarruselController::class, 'index']);
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('empresa', [EmpresaController::class, 'index']);
+    Route::post('empresa', [EmpresaController::class, 'store']);
+    Route::get('empresa/{id}', [EmpresaController::class, 'show']);
+    Route::post('empresa/{id}/actualizar', [EmpresaController::class, 'actualizar']); 
+    Route::delete('empresa/{id}', [EmpresaController::class, 'destroy']);
+});
+
+Route::get('empresa-publico', [EmpresaController::class, 'index']);
