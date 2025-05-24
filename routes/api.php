@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\PayPalController;
+use App\Http\Controllers\Carrusel\CarruselController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\UsuarioController;
@@ -155,3 +156,13 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::delete('/admin/notificaciones/{id}', [NotificacionesAdminController::class, 'eliminarNotificacion']);
     Route::patch('/admin/notificaciones/{id}/leida', [NotificacionesAdminController::class, 'marcarComoLeida']);
 });
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('carrusel', [CarruselController::class, 'index']);
+    Route::post('carrusel', [CarruselController::class, 'store']);
+    Route::get('carrusel/{id}', [CarruselController::class, 'show']);
+    Route::post('carrusel/{id}/actualizar', [CarruselController::class, 'actualizar']); // POST para actualizar
+    Route::delete('carrusel/{id}', [CarruselController::class, 'destroy']);
+});
+
+Route::get('carrusel-publico', [CarruselController::class, 'index']);
