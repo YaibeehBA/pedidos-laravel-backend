@@ -46,11 +46,11 @@ class DetalleProductoController extends Controller
             'tallas' => 'required|array', // 'tallas' sea un array
             'tallas.*' => 'exists:tallas,id', // Cada ID de talla debe existir en la tabla `tallas`
             'precio_base' => 'required|numeric|min:0',
-          
+          'peso_kg' => 'nullable|numeric|min:0', // Peso opcional, debe ser numérico y mayor o igual a 0
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validación para la imagen
         ]);
 
-        $detalleProductoData = $request->only(['producto_id', 'color_id', 'talla_id', 'precio_base']);
+        $detalleProductoData = $request->only(['producto_id', 'color_id', 'talla_id', 'precio_base', 'peso_kg']);
 
         // Subir la imagen si existe
         if ($request->hasFile('imagen_url')) {
@@ -108,6 +108,7 @@ class DetalleProductoController extends Controller
             'tallas' => 'nullable|array',
             'tallas.*' => 'exists:tallas,id',
             'precio_base' => 'nullable|numeric|min:0',
+            'peso_kg' => 'nullable|numeric|min:0',
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
     
@@ -126,6 +127,9 @@ class DetalleProductoController extends Controller
     
         if ($request->has('precio_base')) {
             $detalleProducto->precio_base = $request->input('precio_base');
+        }
+        if ($request->has('peso_kg')) {
+            $detalleProducto->peso_kg = $request->input('peso_kg');
         }
     
         // Sincronizar las tallas asociadas
@@ -157,6 +161,7 @@ class DetalleProductoController extends Controller
                 'producto_id' => $detalleProducto->producto_id,
                 'color_id' => $detalleProducto->color_id,
                 'precio_base' => $detalleProducto->precio_base,
+                'peso_kg' => $detalleProducto->peso_kg,
                 'imagen_url' => $detalleProducto->imagen_url ? Storage::url($detalleProducto->imagen_url) : null, // Obtener la URL completa o null si no hay imagen
                 'tallas' => $detalleProducto->tallas, // Devolver las tallas asociadas
             ]

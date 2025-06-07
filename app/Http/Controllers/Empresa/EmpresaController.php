@@ -20,6 +20,7 @@ class EmpresaController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
+            'referencia' => 'nullable|string|max:255',
             'telefono' => 'required|string|max:20',
             'celular' => 'required|string|max:20',
             'email' => 'required|email|unique:empresas',
@@ -30,7 +31,7 @@ class EmpresaController extends Controller
         ]);
 
         $data = $request->only([
-            'nombre', 'direccion', 'telefono', 'celular',
+            'nombre', 'direccion','referencia', 'telefono', 'celular',
             'email', 'descripcion', 'facebook', 'instagram'
         ]);
 
@@ -97,6 +98,7 @@ class EmpresaController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'sometimes|required|string|max:255',
             'direccion' => 'sometimes|required|string|max:255',
+            'referencia' => 'nullable|string|max:255',
             'telefono' => 'sometimes|required|string|max:20',
             'celular' => 'sometimes|required|string|max:20',
             'email' => 'sometimes|required|email|unique:empresas,email,' . $empresa->id,
@@ -131,6 +133,7 @@ class EmpresaController extends Controller
                 'id' => $empresa->id,
                 'nombre' => $empresa->nombre,
                 'direccion' => $empresa->direccion,
+                'referencia' => $empresa->referencia,
                 'telefono' => $empresa->telefono,
                 'celular' => $empresa->celular,
                 'email' => $empresa->email,

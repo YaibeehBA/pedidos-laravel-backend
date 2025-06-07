@@ -2,34 +2,59 @@
 
 namespace App\Http\Controllers\Notificacion;
 
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\DatabaseNotification;
 
 class NotificacionesAdminController extends Controller
 {
-    public function obtenerNotificaciones()
+    
+public function obtenerNotificaciones()
     {
-        // Obtener todas las notificaciones no leídas de tipo 'admin'
-        $notificaciones = DatabaseNotification::where('read_at', null) // Solo notificaciones no leídas
-            ->where('data->type', 'admin') // Filtrar por tipo 'admin' en el campo data
-            ->get();
+        try {
+            
+            $notificaciones = DatabaseNotification::whereNull('read_at')
+                ->whereJsonContains('data', ['type' => 'admin'])
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        return response()->json([
-            'notificaciones' => $notificaciones
-        ]);
+            if ($notificaciones->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No hay notificaciones pendientes',
+                    'notificaciones' => [],
+                    'count' => 0
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => true,
+                'notificaciones' => $notificaciones,
+                'count' => $notificaciones->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al obtener notificaciones: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al recuperar las notificaciones',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : null
+            ], 500);
+        }
     }
-
-    public function eliminarNotificacion($id)
+public function eliminarNotificacion($id)
     {
-        // Buscar la notificación por ID y que sea de tipo 'admin'
-        $notificacion = DatabaseNotification::where('notifiable_id', $id)
-            ->where('data->type', 'admin') // Filtrar por tipo 'admin'
+        // Buscar la notificación por UUID y que sea de tipo 'admin'
+        $notificacion = DatabaseNotification::where('id', $id)
+            ->whereRaw("data::jsonb->>'type' = 'admin'") // Sintaxis PostgreSQL JSONB
             ->first();
 
         if (!$notificacion) {
             return response()->json([
-                'mensaje' => 'Notificación no encontrada'
+                'mensaje' => 'Notificación no encontrada o no es de tipo admin',
+                'details' => 'ID proporcionado: ' . $id
             ], 404);
         }
 
@@ -37,28 +62,39 @@ class NotificacionesAdminController extends Controller
         $notificacion->delete();
 
         return response()->json([
-            'mensaje' => 'Notificación eliminada correctamente'
+            'mensaje' => 'Notificación eliminada correctamente',
+            'notification_id' => $id, // Opcional: confirmar el ID eliminado
+            'deleted_at' => now()->toDateTimeString() // Opcional: timestamp de eliminación
         ]);
     }
 
-    public function marcarComoLeida($id)
+public function marcarComoLeida($id)
     {
-        // Buscar la notificación por ID y que sea de tipo 'admin'
-        $notificacion = DatabaseNotification::where('notifiable_id', $id)
-            ->where('data->type', 'admin') // Filtrar por tipo 'admin'
+        // Buscar la notificación por UUID y tipo 'admin'
+        $notificacion = DatabaseNotification::where('id', $id)
+            ->whereRaw("data::jsonb->>'type' = 'admin'") // Sintaxis para PostgreSQL JSONB
             ->first();
 
         if (!$notificacion) {
             return response()->json([
-                'mensaje' => 'Notificación no encontrada'
+                'mensaje' => 'Notificación no encontrada o no es de tipo admin'
             ], 404);
         }
 
-        // Marcar la notificación como leída
-        $notificacion->update(['read_at' => now()]);
+        // Marcar como leída (solo si no estaba ya marcada)
+        if (is_null($notificacion->read_at)) {
+            $notificacion->update(['read_at' => now()]);
+            
+            return response()->json([
+                'mensaje' => 'Notificación marcada como leída',
+                'notificacion' => $notificacion->fresh()
+            ]);
+        }
 
         return response()->json([
-            'mensaje' => 'Notificación marcada como leída'
+            'mensaje' => 'La notificación ya estaba marcada como leída',
+            'notificacion' => $notificacion
         ]);
     }
+
 }

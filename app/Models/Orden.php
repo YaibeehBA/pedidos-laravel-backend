@@ -31,44 +31,23 @@ class Orden extends Model
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
-    // public function detalles()
-    // {
-    //     return $this->hasMany(DetalleOrden::class);
-    // }
+   
     public function detalles()
     {
         return $this->hasMany(DetalleOrden::class, 'orden_id');
     }
-    // public function detallesConTallasYColores()
-    // {
-    //     return $this->hasMany(DetalleOrden::class, 'orden_id')
-    //         ->with(['detalleProducto', 'detalleProducto.color', 'detalleProducto.tallas']); // Carga productos con colores y tallas
-    // }
+    
     public function detallesConTallasYColores()
 {
     return $this->hasMany(DetalleOrden::class, 'orden_id')
         ->with(['detalleProducto.producto:id,nombre', 'detalleProducto.color', 'detalleProducto.tallas']);
 }
 
-// public function notifyStatusUpdate()
-// {
-//     // Registrar el objeto usuario en el log
-//     Log::debug('Usuario asociado a la orden:', [$this->usuario]);
+public function envio()
+{
+    return $this->hasOne(DetalleEnvio::class, 'orden_id');
+}
 
-//     switch($this->estado) {
-//         case 'Atrasado':
-//             $this->usuario->notify(new OrdenAtrasadaNotification($this));
-//             $this->fecha_entrega = Carbon::parse($this->fecha_entrega)->addDay();
-//             $this->save();
-//             break;
-//         case 'Entregando':
-//             $this->usuario->notify(new OrdenEntregadaNotification($this));
-//             break;
-//         case 'Pagado':
-//             $this->usuario->notify(new OrdenPagadaNotification($this));
-//             break;
-//     }
-// }
 public function notifyStatusUpdate()
 {
     // Ensure usuario is loaded

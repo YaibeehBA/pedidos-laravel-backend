@@ -9,10 +9,12 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\UsuarioController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Envios\EnviosController;
 use App\Http\Controllers\Pedidos\OrdenController;
 use App\Http\Controllers\Producto\ColorController;
 use App\Http\Controllers\Producto\TallaController;
 use App\Http\Controllers\Empresa\EmpresaController;
+use App\Http\Controllers\Envios\CiudadesController;
 use App\Http\Controllers\Carrusel\CarruselController;
 use App\Http\Controllers\Producto\ProductoController;
 use App\Http\Controllers\Reportes\ReportesController;
@@ -20,6 +22,8 @@ use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\Producto\CategoriaController;
 use App\Http\Controllers\Descuento\DescuentoController;
 use App\Http\Controllers\Producto\DetalleProductoController;
+use App\Http\Controllers\Envios\ConfiguracionEnvioController;
+use App\Http\Controllers\Envios\EnviosAprobadosController;
 use App\Http\Controllers\Notificacion\NotificacionController;
 use App\Http\Controllers\Notificacion\NotificacionesAdminController;
 
@@ -140,6 +144,14 @@ Route::get('/public/ordenes/usuario/{usuarioId}', [OrdenController::class, 'obte
 
 Route::post('/reportes/ingresos-mensuales', [ReportesController::class, 'ingresosMensuales']);
 
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/admin/reportes/datos', [ReportesController::class, 'listarTodosEnvios']);
+    Route::get('/admin/reportes/pedidos', [ReportesController::class, 'InformePedidos']);
+   
+});
+
+
 Route::get('/public/statistics', [DashbordController::class, 'getStatistics']);
 
 // use App\Http\Controllers\PaymentController;
@@ -177,3 +189,24 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 });
 
 Route::get('empresa-publico', [EmpresaController::class, 'index']);
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    
+    Route::apiResource('ciudades-envio', CiudadesController::class);
+    Route::get('/configuracion-envio', [ConfiguracionEnvioController::class, 'index']);
+    Route::post('/configuracion-envio', [ConfiguracionEnvioController::class, 'store']);
+    Route::put('/configuracion-envio', [ConfiguracionEnvioController::class, 'update']);
+
+});
+
+Route::middleware('auth:sanctum')->prefix('admin/envios')->group(function () {
+    Route::get('/', [EnviosController::class, 'listarEnvios']); 
+    Route::get('/{id}', [EnviosController::class, 'mostrarEnvio']); 
+    Route::get('/{id}/pdf', [EnviosController::class, 'mostrarEnvioPDF']); 
+    Route::get('/usuario/{usuarioId}', [EnviosController::class, 'enviosPorUsuario']); 
+    Route::put('/{id}', [EnviosController::class, 'actualizarEstadoEnvio']); 
+});
+
+Route::middleware(['auth:sanctum'])->group(function() {
+    Route::get('/mis-envios', [EnviosAprobadosController::class, 'misEnvios']);
+});

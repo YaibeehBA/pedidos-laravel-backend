@@ -7,10 +7,13 @@ use App\Models\User;
 use App\Models\Orden;
 use App\Models\Talla;
 use App\Models\Descuento;
+use App\Models\CiudadEnvio;
+use App\Models\DetalleEnvio;
 use App\Models\DetalleOrden;
 use Illuminate\Http\Request;
 use App\Models\DetalleProducto;
 use App\Services\PayPalService;
+use App\Models\ConfiguracionEnvio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -26,98 +29,6 @@ class OrdenController extends Controller
 {
    
    
-    // public function crearOrden(Request $request)
-    // {
-    //     // Validar la entrada
-    //     $request->validate([
-    //         'usuario_id' => 'required|exists:users,id',  // Verificar que el usuario existe
-    //         'productos' => 'required|array',            // Asegurarse de que productos es un array
-    //         'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id', // Productos válidos
-    //         'productos.*.cantidad' => 'required|integer|min:1', // La cantidad debe ser al menos 1
-    //         'productos.*.talla_id' => 'required|exists:tallas,id', // Talla válida
-    //     ]);
-
-    //     // Calcular el total de productos en el carrito
-    //     $totalProductos = array_reduce($request->productos, function ($carry, $producto) {
-    //         return $carry + $producto['cantidad'];
-    //     }, 0);
-
-    //     $fechaEntregaResponse = $this->calcularFechaEntregaInterna($totalProductos);
-
-    //     // Convertir la respuesta a un objeto PHP desde el contenido JSON
-    //     $fechaEntregaData = json_decode($fechaEntregaResponse->getContent());
-        
-    //     // Comprobar si la respuesta indica error
-    //     if ($fechaEntregaData->status === 'error') {
-    //         return response()->json([
-    //             'mensaje' => $fechaEntregaData->message
-    //         ], 400); // Responder con un código 400 si hay un error
-    //     }
-        
-    //     // Acceder únicamente al campo fecha_entrega
-    //     $fecha_entrega = $fechaEntregaData->fecha_entrega;
-            
-    
-    //     // Crear la orden
-    //     $orden = Orden::create([
-    //         'usuario_id' => $request->usuario_id,
-    //         'estado' => 'pendiente', // Orden inicialmente con estado pendiente
-    //         'monto_total' => 0,      
-    //         'fecha_entrega' => $fecha_entrega,
-    //         'estado_pago' => 'pendiente', // Inicialmente el estado de pago es pendiente
-    //     ]);
-
-    //     // Variable para el monto total de la orden
-    //     $total = 0;
-
-    //     // Recorrer los productos del carrito de compras y crear los detalles de la orden
-    //     foreach ($request->productos as $producto) {
-    //         // Obtener el detalle del producto y la talla correspondiente
-    //         $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
-    //         $talla = Talla::find($producto['talla_id']);
-
-    //         if (!$detalle_producto || !$talla) {
-    //             // Si no existe el producto o la talla, retornar un error
-    //             return response()->json(['mensaje' => 'Producto o talla no válido'], 400);
-    //         }
-
-    //         // Aplicar rebaja al precio unitario si el total de productos es >= 3
-    //         $precio_unitario = $detalle_producto->precio_base;
-    //         if ($totalProductos >= 3) {
-    //             $precio_unitario = max($precio_unitario - 7, 0); // Asegurarse de que no sea negativo
-    //         }
-
-    //         // Calcular el subtotal para el producto
-    //         $subtotal = round($precio_unitario * $producto['cantidad'], 2);
-
-    //         // Crear un nuevo detalle para la orden
-    //         $detalleOrden = DetalleOrden::create([
-    //             'orden_id' => $orden->id,
-    //             'detalles_productos_id' => $producto['detalles_productos_id'],
-    //             'talla_id' => $producto['talla_id'],
-    //             'cantidad' => $producto['cantidad'],
-    //             'precio_unitario' => $precio_unitario,
-    //             'subtotal' => $subtotal,
-    //         ]);
-
-    //         // Actualizar el monto total de la orden
-    //         $total += $subtotal;
-    //         $total = round($total, 2);
-    //     }
-
-    //     // Actualizar el monto total de la orden
-    //     $orden->update(['monto_total' => $total]);
-
-    //     // Responder con la orden creada
-    //     return response()->json([
-    //         'mensaje' => 'Orden creada exitosamente.',
-    //         'orden' => $orden,
-    //     ]);
-    // }
-   
-   
-
-  
 
     public function listarOrdenes(Request $request)
     
@@ -143,86 +54,6 @@ class OrdenController extends Controller
     }
        
     
-
-    // public function actualizarOrden(Request $request, $id)
-    // {
-    //     // Validar los datos entrantes
-    //     $validated = $request->validate([
-    //         'estado' => 'nullable|in:Pagado,Entregando,Atrasado',
-    //         'estado_pago' => 'nullable|in:pendiente,completado',
-    //     ]);
-
-    //     // Buscar la orden por su ID
-    //     $orden = Orden::find($id);
-
-    //     // Si no encuentra la orden, devolver un error 404
-    //     if (!$orden) {
-    //         return response()->json([
-    //             'message' => 'Orden no encontrada'
-    //         ], 404);
-    //     }
-
-    //     // Actualizar los campos válidos según los datos enviados
-    //     if ($request->has('estado')) {
-    //         $orden->estado = $validated['estado'];
-    //     }
-    //     if ($request->has('estado_pago')) {
-    //         $orden->estado_pago = $validated['estado_pago'];
-    //     }
-
-    //     // Guardar cambios en la base de datos
-    //     $orden->save();
-
-    //     // Responder con un mensaje de éxito y los detalles actualizados de la orden
-    //     return response()->json([
-    //         'message' => 'Orden actualizada exitosamente',
-    //         'orden' => $orden
-    //     ], 200);
-    // }
-
-    // public function actualizarOrden(Request $request, $id)
-    // {
-    //     // Validar los datos entrantes
-    //     $validated = $request->validate([
-    //         'estado' => 'nullable|in:Pagado,Entregando,Atrasado',
-    //         'estado_pago' => 'nullable|in:pendiente,completado',
-    //     ]);
-
-    //     // Buscar la orden por su ID
-    //     $orden = Orden::find($id);
-
-    //     // Si no encuentra la orden, devolver un error 404
-    //     if (!$orden) {
-    //         return response()->json([
-    //             'message' => 'Orden no encontrada'
-    //         ], 404);
-    //     }
-
-    //     // Actualizar los campos válidos según los datos enviados
-    //     $estadoAnterior = $orden->estado; // Guardamos el estado anterior
-
-    //     if ($request->has('estado')) {
-    //         $orden->estado = $validated['estado'];
-    //     }
-    //     if ($request->has('estado_pago')) {
-    //         $orden->estado_pago = $validated['estado_pago'];
-    //     }
-
-    //     // Guardar cambios en la base de datos
-    //     $orden->save();
-
-    //     // Solo enviar notificación si el estado ha cambiado
-    //     if ($estadoAnterior !== $orden->estado) {
-    //         $orden->notifyStatusUpdate();
-    //     }
-
-    //     // Responder con un mensaje de éxito y los detalles actualizados de la orden
-    //     return response()->json([
-    //         'message' => 'Orden actualizada exitosamente',
-    //         'orden' => $orden
-    //     ], 200);
-    // }
-
     public function actualizarOrden(Request $request, $id)
     {
         try {
@@ -566,117 +397,6 @@ class OrdenController extends Controller
         ]);
     }
     
-    // public function crearOrden(Request $request)
-    // {
-    //     $this->validarEntrada($request);
-
-    //     $totalProductos = $this->calcularTotalProductos($request->productos);
-        
-    //     $fecha_entrega = $this->obtenerFechaEntrega($totalProductos);
-
-    //     $orden = $this->crearOrdenBase($request->usuario_id, $fecha_entrega);
-
-    //     $total = $this->procesarProductos($orden->id, $request->productos, $totalProductos);
-
-    //     $orden->update(['monto_total' => $total]);
-
-    //     return response()->json([
-    //         'mensaje' => 'Orden creada exitosamente.',
-    //         'orden' => $orden,
-    //     ]);
-    // }
-
-
-    // private function validarEntrada(Request $request)
-    // {
-    //     $request->validate([
-    //         'usuario_id' => 'required|exists:users,id',
-    //         'productos' => 'required|array',
-    //         'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id',
-    //         'productos.*.cantidad' => 'required|integer|min:1',
-    //         'productos.*.talla_id' => 'required|exists:tallas,id',
-    //     ]);
-    // }
-
-    // private function calcularTotalProductos(array $productos): int
-    // {
-    //     return array_reduce($productos, function ($carry, $producto) {
-    //         return $carry + $producto['cantidad'];
-    //     }, 0);
-    // }
-
-    // private function obtenerFechaEntrega(int $totalProductos): string
-    // {
-    //     $fechaEntregaResponse = $this->calcularFechaEntregaInterna($totalProductos);
-    //     $fechaEntregaData = json_decode($fechaEntregaResponse->getContent());
-
-    //     if ($fechaEntregaData->status === 'error') {
-    //         abort(400, $fechaEntregaData->message);
-    //     }
-
-    //     return $fechaEntregaData->fecha_entrega;
-    // }
-
-    // private function crearOrdenBase(int $usuarioId, string $fechaEntrega)
-    // {
-    //     return Orden::create([
-    //         'usuario_id' => $usuarioId,
-    //         'estado' => 'pendiente',
-    //         'monto_total' => 0,
-    //         'fecha_entrega' => $fechaEntrega,
-    //         'estado_pago' => 'completado',
-    //     ]);
-    // }
-
-    // private function procesarProductos(int $ordenId, array $productos, int $totalProductos): float
-    // {
-    //     $total = 0;
-
-    //     foreach ($productos as $producto) {
-    //         $detalle_producto = DetalleProducto::find($producto['detalles_productos_id']);
-    //         $talla = Talla::find($producto['talla_id']);
-
-    //         if (!$detalle_producto || !$talla) {
-    //             abort(400, 'Producto o talla no válido');
-    //         }
-
-    //         $precio_unitario = $this->calcularPrecioUnitario($detalle_producto->precio_base, $totalProductos);
-
-    //         $subtotal = $this->crearDetalleOrden(
-    //             $ordenId, 
-    //             $producto['detalles_productos_id'], 
-    //             $producto['talla_id'], 
-    //             $producto['cantidad'], 
-    //             $precio_unitario
-    //         );
-
-    //         $total += $subtotal;
-    //     }
-
-    //     return round($total, 2);
-    // }
-
-    // private function calcularPrecioUnitario(float $precioBase, int $totalProductos): float
-    // {
-    //     return $totalProductos >= 3 ? max($precioBase - 7, 0) : $precioBase;
-    // }
-
-    // private function crearDetalleOrden(int $ordenId, int $productoId, int $tallaId, int $cantidad, float $precioUnitario): float
-    // {
-    //     $subtotal = round($precioUnitario * $cantidad, 2);
-
-    //     DetalleOrden::create([
-    //         'orden_id' => $ordenId,
-    //         'detalles_productos_id' => $productoId,
-    //         'talla_id' => $tallaId,
-    //         'cantidad' => $cantidad,
-    //         'precio_unitario' => $precioUnitario,
-    //         'subtotal' => $subtotal,
-    //     ]);
-
-    //     return $subtotal;
-    // }
-
 
 
     public function crearOrden(Request $request)
@@ -698,9 +418,16 @@ class OrdenController extends Controller
         }
 
         $total = $this->procesarProductosConDescuentos($orden->id, $request->productos, $descuentosData);
-
+        
+        // **NUEVO: Calcular peso total y costo de envío**
+        $pesoTotal = $this->calcularPesoTotal($request->productos);
+        $costoEnvio = $this->calcularCostoEnvio($request->tipo_envio, $request->ciudad_envio_id, $pesoTotal);
+        
+        // **NUEVO: Crear detalle de envío**
+        $this->crearDetalleEnvio($orden->id, $request, $pesoTotal, $costoEnvio);
+        
         $orden->update([
-            'monto_total' => $total,
+            'monto_total' => $total + $costoEnvio,
             'descuento_total' => $descuentosData['descuento_total']
         ]);
         // Obtener el usuario asociado a la orden
@@ -718,7 +445,9 @@ class OrdenController extends Controller
         }
         return response()->json([
             'mensaje' => 'Orden creada exitosamente.',
-            'orden' => $orden,
+            
+            'orden' => $orden->load('envio'), // Cargar la relación
+            'costo_envio' => $costoEnvio,
         ]);
     }
 
@@ -730,6 +459,13 @@ class OrdenController extends Controller
             'productos.*.detalles_productos_id' => 'required|exists:detalles_productos,id',
             'productos.*.cantidad' => 'required|integer|min:1',
             'productos.*.talla_id' => 'required|exists:tallas,id',
+
+             // Nuevas validaciones para envío
+            'tipo_envio' => 'required|string|in:Envío Nacional,Retiro tienda Física',
+            'ciudad_envio_id' => 'required_if:tipo_envio,Envío Nacional|exists:ciudad_envios,id',
+            'direccion' => 'required_if:tipo_envio,Envío Nacional|string|max:255',
+            'referencia' => 'nullable|string|max:255',
+
         ]);
     }
 
@@ -941,6 +677,74 @@ class OrdenController extends Controller
             ], 500);
         }
     }
+
+private function calcularPesoTotal(array $productos): float
+{
+    $pesoTotal = 0;
+    
+    foreach ($productos as $producto) {
+        $detalleProducto = DetalleProducto::find($producto['detalles_productos_id']);
+        
+        $pesoTotal += ($detalleProducto->peso_kg ?? 0.2) * $producto['cantidad']; // 0.2kg por defecto para camisas
+    }
+    
+    return round($pesoTotal, 2);
+}
+
+private function calcularCostoEnvio(string $tipoEnvio, ?int $ciudadId, float $pesoTotal): float
+{
+    // Limpiar espacios para evitar problemas
+    $tipoEnvio = trim($tipoEnvio);
+    
+    if ($tipoEnvio === 'Retiro tienda Física') {
+        return 0.00;
+    }
+    
+    if ($tipoEnvio === 'Envío Nacional') { // SIN espacio al final
+        if (!$ciudadId) {
+            abort(400, 'Ciudad de envío requerida para envío nacional');
+        }
+        
+        $ciudad = CiudadEnvio::find($ciudadId);
+        if (!$ciudad) {
+            abort(400, 'Ciudad de envío no válida');
+        }
+        
+        // Obtener precio por kg
+        $configuracion = ConfiguracionEnvio::first();
+        if (!$configuracion) {
+            abort(500, 'Configuración de envío no encontrada');
+        }
+        
+        $precioPorKg = $configuracion->precio_por_kg;
+        $costoTotal = ($pesoTotal * $precioPorKg) + $ciudad->precio_envio;
+        
+        return round($costoTotal, 2);
+    }
+    
+    return 0.00;
+}
+
+private function crearDetalleEnvio(int $ordenId, Request $request, float $pesoTotal, float $costoEnvio): void
+{
+    $tipoEnvio = trim($request->tipo_envio); 
+    
+    DetalleEnvio::create([
+        'orden_id' => $ordenId,
+        'tipo_envio' => $tipoEnvio,
+        'ciudad_envio_id' => $tipoEnvio === 'Envío Nacional' 
+            ? $request->ciudad_envio_id 
+            : CiudadEnvio::getCiudadOrigen()->id,
+        'direccion' => $tipoEnvio === 'Envío Nacional' 
+            ? $request->direccion 
+            : 'Retiro tienda Física',
+        'referencia' => $request->referencia,
+        'peso_total' => $pesoTotal,
+        'costo_envio' => $costoEnvio,
+        'estado_envio' => 'pendiente'
+    ]);
+}
+
 }
 
 
