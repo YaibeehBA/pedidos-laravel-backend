@@ -26,6 +26,7 @@ use App\Http\Controllers\Envios\ConfiguracionEnvioController;
 use App\Http\Controllers\Envios\EnviosAprobadosController;
 use App\Http\Controllers\Notificacion\NotificacionController;
 use App\Http\Controllers\Notificacion\NotificacionesAdminController;
+use App\Http\Controllers\Consultas\ConsultasController;
 
 
 /*
@@ -210,3 +211,14 @@ Route::middleware('auth:sanctum')->prefix('admin/envios')->group(function () {
 Route::middleware(['auth:sanctum'])->group(function() {
     Route::get('/mis-envios', [EnviosAprobadosController::class, 'misEnvios']);
 });
+
+use App\Http\Controllers\ConsultaController;
+
+Route::prefix('consultas')->group(function () {
+    Route::post('/', [ConsultasController::class, 'store']);              
+    Route::get('/', [ConsultasController::class, 'index']);               
+    Route::get('/{id}', [ConsultasController::class, 'show']);            // Ver una consulta por ID
+    Route::put('/{id}/leida', [ConsultasController::class, 'marcarLeida']); // Marcar como leída
+    Route::delete('/{id}', [ConsultasController::class, 'destroy']);      // Eliminar
+});
+
