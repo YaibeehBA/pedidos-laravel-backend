@@ -13,11 +13,11 @@ class CiudadEnvio extends Model
         'precio_envio'
     ];
     
-     public static function getCiudadOrigen()
-    {
-        return self::firstOrCreate(
-            ['nombre' => 'Riobamba'],
-            ['precio_envio' => 0.00]
-        );
-    }
+   public static function getCiudadOrigen()
+{
+    return self::firstOrCreate(
+        ['nombre' => 'Riobamba'],
+        ['precio_envio' => 0.00]
+    )->id; 
+}
 }

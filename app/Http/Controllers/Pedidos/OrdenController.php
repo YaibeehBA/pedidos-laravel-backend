@@ -462,7 +462,7 @@ class OrdenController extends Controller
 
              // Nuevas validaciones para envío
             'tipo_envio' => 'required|string|in:Envío Nacional,Retiro tienda Física',
-            'ciudad_envio_id' => 'required_if:tipo_envio,Envío Nacional|exists:ciudad_envios,id',
+            'ciudad_envio_id' => 'nullable|required_if:tipo_envio,Envío Nacional|exists:ciudad_envios,id',
             'direccion' => 'required_if:tipo_envio,Envío Nacional|string|max:255',
             'referencia' => 'nullable|string|max:255',
 
@@ -691,26 +691,57 @@ private function calcularPesoTotal(array $productos): float
     return round($pesoTotal, 2);
 }
 
+// private function calcularCostoEnvio(string $tipoEnvio, ?int $ciudadId, float $pesoTotal): float
+// {
+//     // Limpiar espacios para evitar problemas
+//     $tipoEnvio = trim($tipoEnvio);
+    
+//     if ($tipoEnvio === 'Retiro tienda Física') {
+//         return 0.00;
+//     }
+    
+//     if ($tipoEnvio === 'Envío Nacional') { // SIN espacio al final
+//         if (!$ciudadId) {
+//             abort(400, 'Ciudad de envío requerida para envío nacional');
+//         }
+        
+//         $ciudad = CiudadEnvio::find($ciudadId);
+//         if (!$ciudad) {
+//             abort(400, 'Ciudad de envío no válida');
+//         }
+        
+//         // Obtener precio por kg
+//         $configuracion = ConfiguracionEnvio::first();
+//         if (!$configuracion) {
+//             abort(500, 'Configuración de envío no encontrada');
+//         }
+        
+//         $precioPorKg = $configuracion->precio_por_kg;
+//         $costoTotal = ($pesoTotal * $precioPorKg) + $ciudad->precio_envio;
+        
+//         return round($costoTotal, 2);
+//     }
+    
+//     return 0.00;
+// }
+
 private function calcularCostoEnvio(string $tipoEnvio, ?int $ciudadId, float $pesoTotal): float
 {
-    // Limpiar espacios para evitar problemas
     $tipoEnvio = trim($tipoEnvio);
     
     if ($tipoEnvio === 'Retiro tienda Física') {
         return 0.00;
     }
     
-    if ($tipoEnvio === 'Envío Nacional') { // SIN espacio al final
-        if (!$ciudadId) {
-            abort(400, 'Ciudad de envío requerida para envío nacional');
-        }
+    if ($tipoEnvio === 'Envío Nacional') {
+        // Si por alguna razón viene null, usamos la ciudad de origen
+        $ciudadId = $ciudadId ?? CiudadEnvio::getCiudadOrigen();
         
         $ciudad = CiudadEnvio::find($ciudadId);
         if (!$ciudad) {
             abort(400, 'Ciudad de envío no válida');
         }
         
-        // Obtener precio por kg
         $configuracion = ConfiguracionEnvio::first();
         if (!$configuracion) {
             abort(500, 'Configuración de envío no encontrada');
@@ -734,7 +765,7 @@ private function crearDetalleEnvio(int $ordenId, Request $request, float $pesoTo
         'tipo_envio' => $tipoEnvio,
         'ciudad_envio_id' => $tipoEnvio === 'Envío Nacional' 
             ? $request->ciudad_envio_id 
-            : CiudadEnvio::getCiudadOrigen()->id,
+            : CiudadEnvio::getCiudadOrigen(), 
         'direccion' => $tipoEnvio === 'Envío Nacional' 
             ? $request->direccion 
             : 'Retiro tienda Física',

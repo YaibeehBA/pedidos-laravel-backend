@@ -132,7 +132,7 @@ public function mostrarEnvioPDF($id)
                     'cantidad' => $detalle->cantidad,
                     'talla' => $detalle->talla->nombre,
                     'color' => $detalle->detalleProducto->color->nombre ?? 'No especificado', 
-                    'precio_unitario' => $detalle->precio_unitario,
+                    'precio_unitario' => $detalle->precio_base,
                     'subtotal' => $detalle->subtotal,
                 ];
             }),

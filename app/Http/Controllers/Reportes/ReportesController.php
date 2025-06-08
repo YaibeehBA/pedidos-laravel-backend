@@ -155,48 +155,116 @@ public function InformePedidos()
         ->get();
 
         // Transformamos los envíos para el informe
+        // $informePedidos = $envios->map(function ($detalleEnvio) {
+        //     return [
+        //         'id_pedido' => $detalleEnvio->orden->id,
+        //         'fecha_pedido' => $detalleEnvio->created_at->format('Y-m-d H:i:s'),
+        //         'cliente' => [
+        //             'nombre_completo' => $detalleEnvio->orden->usuario->nombre . ' ' . $detalleEnvio->orden->usuario->apellido,
+        //             'telefono' => $detalleEnvio->orden->usuario->celular ?? 'No especificado',
+        //             'email' => $detalleEnvio->orden->usuario->email,
+        //         ],
+        //         'direccion_entrega' => [
+        //             'ciudad' => $detalleEnvio->ciudad->nombre,
+        //             'direccion' => $detalleEnvio->direccion,
+        //             'referencia' => $detalleEnvio->referencia ?? 'Sin referencia',
+        //         ],
+        //         'tipo_entrega' => $detalleEnvio->tipo_envio,
+        //         'detalle_productos' => $detalleEnvio->orden->detalles->map(function ($detalle) {
+        //              $precioReal = $detalle->precio_unitario;
+                        
+        //                 // Si hay descuento aplicado, sumar el descuento al precio unitario para obtener el precio original
+        //                 if ($detalle->descuento_unitario > 0) {
+        //                     $precioReal = $detalle->precio_unitario + $detalle->descuento_unitario;
+        //                 }
+        //             return [
+        //                 'producto_id' => $detalle->detalleProducto->producto->id,
+        //                 'producto' => $detalle->detalleProducto->producto->nombre,
+        //                 'descripcion' => $detalle->detalleProducto->producto->descripcion ?? 'Sin descripción',
+        //                 'cantidad' => $detalle->cantidad,
+        //                 'talla' => $detalle->talla->nombre,
+        //                 'color' => $detalle->detalleProducto->color->nombre ?? 'No especificado',
+        //                 'precio_unitario' => $detalle->precio_unitario, // Precio con descuento
+        //                 'precio_real' => $precioReal, // Precio sin descuento
+        //                 'descuento_unitario' => $detalle->descuento_unitario, // Descuento aplicado
+        //                 'subtotal' => $detalle->subtotal
+        //             ];
+        //         }),
+        //         'resumen_pedido' => [
+        //             'subtotal' => $detalleEnvio->orden->monto_total + $detalleEnvio->orden->descuento_total,
+        //             'descuento' => $detalleEnvio->orden->descuento_total,
+        //             'costo_envio' => $detalleEnvio->costo_envio,
+        //             'total' => $detalleEnvio->orden->monto_total,
+        //             'estado_pago' => $detalleEnvio->orden->estado_pago,
+        //         ],
+        //         'estado_pedido' => [
+        //             'estado_envio' => $detalleEnvio->estado_envio,
+        //             'estado_orden' => $detalleEnvio->orden->estado,
+        //             'fecha_entrega_estimada' => $detalleEnvio->orden->fecha_entrega ?? 'No especificada',
+        //         ],
+        //         'peso_total' => $detalleEnvio->peso_total,
+        //     ];
+        // });
         $informePedidos = $envios->map(function ($detalleEnvio) {
+    // Calcular el subtotal sumando los subtotales de cada producto (sin descuentos)
+    $subtotalSinDescuento = $detalleEnvio->orden->detalles->sum(function ($detalle) {
+        return ($detalle->precio_unitario + $detalle->descuento_unitario) * $detalle->cantidad;
+    });
+    
+    // Calcular el descuento total sumando los descuentos de cada producto
+    $descuentoTotal = $detalleEnvio->orden->detalles->sum(function ($detalle) {
+        return $detalle->descuento_unitario * $detalle->cantidad;
+    });
+    
+    // El subtotal con descuento ya viene en monto_total (pero lo calculamos por seguridad)
+    $subtotalConDescuento = $subtotalSinDescuento - $descuentoTotal;
+    
+    return [
+        'id_pedido' => $detalleEnvio->orden->id,
+        'fecha_pedido' => $detalleEnvio->created_at->format('Y-m-d H:i:s'),
+        'cliente' => [
+            'nombre_completo' => $detalleEnvio->orden->usuario->nombre . ' ' . $detalleEnvio->orden->usuario->apellido,
+            'telefono' => $detalleEnvio->orden->usuario->celular ?? 'No especificado',
+            'email' => $detalleEnvio->orden->usuario->email,
+        ],
+        'direccion_entrega' => [
+            'ciudad' => $detalleEnvio->ciudad->nombre,
+            'direccion' => $detalleEnvio->direccion,
+            'referencia' => $detalleEnvio->referencia ?? 'Sin referencia',
+        ],
+        'tipo_entrega' => $detalleEnvio->tipo_envio,
+        'detalle_productos' => $detalleEnvio->orden->detalles->map(function ($detalle) {
+            $precioReal = $detalle->precio_unitario + $detalle->descuento_unitario;
+            
             return [
-                'id_pedido' => $detalleEnvio->orden->id,
-                'fecha_pedido' => $detalleEnvio->created_at->format('Y-m-d H:i:s'),
-                'cliente' => [
-                    'nombre_completo' => $detalleEnvio->orden->usuario->nombre . ' ' . $detalleEnvio->orden->usuario->apellido,
-                    'telefono' => $detalleEnvio->orden->usuario->celular ?? 'No especificado',
-                    'email' => $detalleEnvio->orden->usuario->email,
-                ],
-                'direccion_entrega' => [
-                    'ciudad' => $detalleEnvio->ciudad->nombre,
-                    'direccion' => $detalleEnvio->direccion,
-                    'referencia' => $detalleEnvio->referencia ?? 'Sin referencia',
-                ],
-                'tipo_entrega' => $detalleEnvio->tipo_envio,
-                'detalle_productos' => $detalleEnvio->orden->detalles->map(function ($detalle) {
-                    return [
-                        'producto_id' => $detalle->detalleProducto->producto->id,
-                        'producto' => $detalle->detalleProducto->producto->nombre,
-                        'descripcion' => $detalle->detalleProducto->producto->descripcion ?? 'Sin descripción',
-                        'cantidad' => $detalle->cantidad,
-                        'talla' => $detalle->talla->nombre,
-                        'color' => $detalle->detalleProducto->color->nombre ?? 'No especificado',
-                        'precio_unitario' => $detalle->precio_unitario,
-                        'subtotal' => $detalle->subtotal,
-                    ];
-                }),
-                'resumen_pedido' => [
-                    'subtotal' => $detalleEnvio->orden->monto_total + $detalleEnvio->orden->descuento_total,
-                    'descuento' => $detalleEnvio->orden->descuento_total,
-                    'costo_envio' => $detalleEnvio->costo_envio,
-                    'total' => $detalleEnvio->orden->monto_total,
-                    'estado_pago' => $detalleEnvio->orden->estado_pago,
-                ],
-                'estado_pedido' => [
-                    'estado_envio' => $detalleEnvio->estado_envio,
-                    'estado_orden' => $detalleEnvio->orden->estado,
-                    'fecha_entrega_estimada' => $detalleEnvio->orden->fecha_entrega ?? 'No especificada',
-                ],
-                'peso_total' => $detalleEnvio->peso_total,
+                'producto_id' => $detalle->detalleProducto->producto->id,
+                'producto' => $detalle->detalleProducto->producto->nombre,
+                'descripcion' => $detalle->detalleProducto->producto->descripcion ?? 'Sin descripción',
+                'cantidad' => $detalle->cantidad,
+                'talla' => $detalle->talla->nombre,
+                'color' => $detalle->detalleProducto->color->nombre ?? 'No especificado',
+                'precio_unitario' => $detalle->precio_unitario, // Precio con descuento
+                'precio_real' => $precioReal, // Precio sin descuento
+                'descuento_unitario' => $detalle->descuento_unitario, // Descuento aplicado
+                'subtotal' => $detalle->subtotal
             ];
-        });
+        }),
+        'resumen_pedido' => [
+            'subtotal_sin_descuento' => $subtotalSinDescuento,
+            'subtotal' => $subtotalConDescuento,
+            'descuento_total' => $descuentoTotal,
+            'costo_envio' => $detalleEnvio->costo_envio,
+            'total' => $subtotalConDescuento + $detalleEnvio->costo_envio,
+            'estado_pago' => $detalleEnvio->orden->estado_pago,
+        ],
+        'estado_pedido' => [
+            'estado_envio' => $detalleEnvio->estado_envio,
+            'estado_orden' => $detalleEnvio->orden->estado,
+            'fecha_entrega_estimada' => $detalleEnvio->orden->fecha_entrega ?? 'No especificada',
+        ],
+        'peso_total' => $detalleEnvio->peso_total,
+    ];
+});
 
         return response()->json([
             'success' => true,
